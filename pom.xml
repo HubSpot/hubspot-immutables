@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.hubspot</groupId>
+    <artifactId>basepom</artifactId>
+    <version>18.2</version>
+  </parent>
+
+  <groupId>com.hubspot.immutables</groupId>
+  <artifactId>hubspot-immutables</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>ImmutablesExceptions</module>
+    <module>HubSpotStyle</module>
+  </modules>
+
+  <properties>
+    <project.build.targetJdk>1.8</project.build.targetJdk>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.hubspot.immutables</groupId>
+        <artifactId>immutables-exceptions</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.immutables</groupId>
+        <artifactId>value</artifactId>
+        <version>2.5.6</version>
+      </dependency>
+      <dependency>
+        <groupId>com.hubspot.rosetta</groupId>
+        <artifactId>RosettaAnnotations</artifactId>
+        <version>3.11.8</version>
+      </dependency>
+      <dependency>
+        <groupId>com.hubspot.rosetta</groupId>
+        <artifactId>RosettaCore</artifactId>
+        <version>3.11.8</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
