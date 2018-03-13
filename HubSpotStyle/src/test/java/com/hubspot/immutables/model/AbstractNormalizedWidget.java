@@ -10,12 +10,12 @@ import com.hubspot.immutables.styles.HubSpotStyle;
 
 @HubSpotStyle
 @Value.Immutable
-public interface NormalizedWidgetIF {
-  BigDecimal getValue();
-  Optional<BigDecimal> getOptionalValue();
+public abstract class AbstractNormalizedWidget {
+  public abstract BigDecimal getValue();
+  public abstract Optional<BigDecimal> getOptionalValue();
 
   @Value.Check
-  default NormalizedWidgetIF normalize() {
+  public AbstractNormalizedWidget normalize() {
     return isNormalized()
         ? this
         : NormalizedWidget.builder()
@@ -27,7 +27,7 @@ public interface NormalizedWidgetIF {
 
   @JsonIgnore
   @Value.Auxiliary
-  default boolean isNormalized() {
+  private boolean isNormalized() {
     return getValue().scale() == 6
         && getOptionalValue().map(bigDecimal -> bigDecimal.scale() == 6).orElse(true);
   }

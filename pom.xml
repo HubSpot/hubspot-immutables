@@ -4,8 +4,8 @@
 
   <parent>
     <groupId>com.hubspot</groupId>
-    <artifactId>parent-pom</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>basepom</artifactId>
+    <version>18.2</version>
   </parent>
 
   <groupId>com.hubspot.immutables</groupId>
@@ -17,4 +17,33 @@
     <module>ImmutablesExceptions</module>
     <module>HubSpotStyle</module>
   </modules>
+
+  <properties>
+    <project.build.targetJdk>1.8</project.build.targetJdk>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.hubspot.immutables</groupId>
+        <artifactId>immutables-exceptions</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.immutables</groupId>
+        <artifactId>value</artifactId>
+        <version>2.5.6</version>
+      </dependency>
+      <dependency>
+        <groupId>com.hubspot.rosetta</groupId>
+        <artifactId>RosettaAnnotations</artifactId>
+        <version>3.11.8</version>
+      </dependency>
+      <dependency>
+        <groupId>com.hubspot.rosetta</groupId>
+        <artifactId>RosettaCore</artifactId>
+        <version>3.11.8</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>
