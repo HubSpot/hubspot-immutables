@@ -4,7 +4,7 @@ import org.immutables.value.Value;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.hubspot.immutables.styles.HubSpotStyle;
+import com.hubspot.immutables.style.HubSpotStyle;
 import com.hubspot.rosetta.annotations.RosettaNaming;
 import com.hubspot.rosetta.annotations.RosettaProperty;
 
