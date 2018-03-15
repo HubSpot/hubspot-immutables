@@ -1,4 +1,4 @@
-package com.hubspot.immutables.exceptions;
+package com.hubspot.immutables.validation;
 
 import java.util.Optional;
 

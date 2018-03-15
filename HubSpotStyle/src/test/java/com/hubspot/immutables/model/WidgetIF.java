@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.immutables.value.Value;
 
-import com.hubspot.immutables.exceptions.ImmutableConditions;
+import com.hubspot.immutables.validation.ImmutableConditions;
 import com.hubspot.immutables.styles.HubSpotStyle;
 
 @HubSpotStyle

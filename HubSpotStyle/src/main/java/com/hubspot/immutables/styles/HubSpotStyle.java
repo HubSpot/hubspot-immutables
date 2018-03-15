@@ -9,7 +9,7 @@ import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.hubspot.immutables.exceptions.InvalidImmutableStateException;
+import com.hubspot.immutables.validation.InvalidImmutableStateException;
 
 @Target({ ElementType.PACKAGE, ElementType.TYPE})
 @Retention(RetentionPolicy.CLASS) // Make it class retention for incremental compilation
