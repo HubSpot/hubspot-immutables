@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.immutables.value.Value;
 
-import com.hubspot.immutables.styles.HubSpotStyle;
+import com.hubspot.immutables.style.HubSpotStyle;
 
 @HubSpotStyle
 @Value.Immutable

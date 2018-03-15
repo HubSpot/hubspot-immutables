@@ -1,4 +1,4 @@
-package com.hubspot.immutables.styles;
+package com.hubspot.immutables.style;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
