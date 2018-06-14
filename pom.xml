@@ -14,8 +14,8 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>ImmutablesExceptions</module>
-    <module>HubSpotStyle</module>
+    <module>immutables-exceptions</module>
+    <module>hubspot-style</module>
   </modules>
 
   <properties>
