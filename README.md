@@ -1,4 +1,4 @@
-# ImmutablesUtils
+# hubspot-immutables
 
 Using [Java Immutables](http://immutables.github.io/) at HubSpot. 
 
