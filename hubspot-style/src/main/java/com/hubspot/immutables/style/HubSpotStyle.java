@@ -9,11 +9,15 @@ import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hubspot.immutable.collection.encoding.ImmutableListEncodingEnabled;
+import com.hubspot.immutable.collection.encoding.ImmutableSetEncodingEnabled;
 import com.hubspot.immutables.validation.InvalidImmutableStateException;
 
 @Target({ ElementType.PACKAGE, ElementType.TYPE})
 @Retention(RetentionPolicy.CLASS) // Make it class retention for incremental compilation
 @JsonSerialize
+@ImmutableListEncodingEnabled
+@ImmutableSetEncodingEnabled
 @Value.Style(
     get = {"is*", "get*"}, // Detect 'get' and 'is' prefixes in accessor methods
     init = "set*", // Builder initialization methods will have 'set' prefix
