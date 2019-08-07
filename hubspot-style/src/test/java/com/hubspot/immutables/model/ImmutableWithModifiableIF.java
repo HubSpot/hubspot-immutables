@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.immutables.value.Value;
 
-import com.hubspot.immutables.style.HubSpotStyle;
+import com.hubspot.immutables.style.HubSpotModifiableStyle;
 
-@HubSpotStyle
+@HubSpotModifiableStyle
 @Value.Immutable
 @Value.Modifiable
 public interface ImmutableWithModifiableIF {
