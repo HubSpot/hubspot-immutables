@@ -9,7 +9,6 @@ import org.immutables.encode.Encoding.StandardNaming;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.hubspot.immutable.collection.encoding.util.BuilderState;
 
 @Encoding
 public class ImmutableListEncoding<T> {
@@ -40,89 +39,68 @@ public class ImmutableListEncoding<T> {
     private ImmutableList<T> list = null;
     private ImmutableList.Builder<T> builder = null;
 
-    private BuilderState currentState = BuilderState.EMPTY;
-
     @Encoding.Init
     @Encoding.Naming(standard = StandardNaming.ADD)
     void add(T element) {
-      switch (currentState) {
-        case GROWABLE:
-          builder.add(element);
-          break;
-        case FULL:
-          builder = ImmutableList.<T>builderWithExpectedSize(list.size() + 1)
-              .addAll(list)
-              .add(element);
+      if (builder != null) {
+        builder.add(element);
+      } else if (list != null) {
+        builder = ImmutableList.<T>builderWithExpectedSize(list.size() + 1)
+            .addAll(list)
+            .add(element);
 
-          list = null;
-          break;
-        case EMPTY:
-          builder = ImmutableList.builder();
-          builder.add(element);
-          break;
+        list = null;
+      } else {
+        builder = ImmutableList.builder();
+        builder.add(element);
       }
-
-      currentState = BuilderState.GROWABLE;
     }
 
     @Encoding.Init
     @Encoding.Naming(standard = StandardNaming.ADD_ALL)
     void addAll(Iterable<T> elements) {
-      switch (currentState) {
-        case GROWABLE:
+      if (builder != null) {
+        builder.addAll(elements);
+      } else if (list != null) {
+        int additionalSize = 0;
+        if (elements instanceof Collection) {
+          additionalSize = ((Collection<T>) elements).size();
+        }
+
+        builder = ImmutableList.<T>builderWithExpectedSize(list.size() + additionalSize)
+            .addAll(list)
+            .addAll(elements);
+
+        list = null;
+      } else {
+        if (elements instanceof ImmutableCollection) {
+          set(((ImmutableCollection<T>) elements));
+        } else if (elements instanceof Collection) {
+          builder = ImmutableList.builderWithExpectedSize(((Collection<T>) elements).size());
           builder.addAll(elements);
-          break;
-        case FULL:
-          int additionalSize = 0;
-          if (elements instanceof Collection) {
-            additionalSize = ((Collection<T>) elements).size();
-          }
-
-          builder = ImmutableList.<T>builderWithExpectedSize(list.size() + additionalSize)
-              .addAll(list)
-              .addAll(elements);
-
-          list = null;
-          break;
-        case EMPTY:
-          if (elements instanceof ImmutableCollection) {
-            set(((ImmutableCollection<T>) elements));
-            currentState = BuilderState.FULL;
-            return;
-          } else if (elements instanceof Collection) {
-            builder = ImmutableList.builderWithExpectedSize(((Collection<T>) elements).size());
-          } else {
-            builder = ImmutableList.builder();
-          }
-
+        } else {
+          builder = ImmutableList.builder();
           builder.addAll(elements);
-          break;
+        }
       }
-
-      currentState = BuilderState.GROWABLE;
-      // This return is weird but b/c we use a return above, we need this here to signal immutables to add another return here
-      return;
     }
 
     @Encoding.Init
     @Encoding.Copy
     @Naming(standard = StandardNaming.INIT)
     void set(Collection<T> input) {
-      currentState = BuilderState.FULL;
       list = ImmutableList.copyOf(input);
       builder = null;
     }
 
     @Encoding.Build
     ImmutableList<T> build() {
-      switch (currentState) {
-        case GROWABLE:
-          return builder.build();
-        case FULL:
-          return list;
-        case EMPTY:
-        default:
-          return ImmutableList.of();
+      if (builder != null) {
+        return builder.build();
+      } else if (list != null) {
+        return list;
+      } else {
+        return ImmutableList.of();
       }
     }
 
