@@ -31,11 +31,11 @@
       <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutables-exceptions</artifactId>
     </dependency>
+
     <dependency>
       <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutable-collection-encoding</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.immutables</groupId>
       <artifactId>value</artifactId>
