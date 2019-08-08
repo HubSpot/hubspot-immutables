@@ -32,7 +32,7 @@
       <artifactId>immutables-exceptions</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.hubspot</groupId>
+      <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutable-collection-encoding</artifactId>
     </dependency>
 

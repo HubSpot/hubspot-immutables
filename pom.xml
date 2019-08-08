@@ -57,7 +57,7 @@
         <version>25.0-jre</version>
       </dependency>
       <dependency>
-        <groupId>com.hubspot</groupId>
+        <groupId>com.hubspot.immutables</groupId>
         <artifactId>immutable-collection-encoding</artifactId>
         <version>1.0-SNAPSHOT</version>
       </dependency>
