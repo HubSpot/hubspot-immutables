@@ -6,6 +6,7 @@ import org.immutables.value.Value;
 
 import com.hubspot.immutables.style.HubSpotModifiableStyle;
 
+
 @Value.Immutable
 @Value.Modifiable
 @HubSpotModifiableStyle
