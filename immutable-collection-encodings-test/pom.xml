@@ -8,7 +8,7 @@
     <version>1.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>immutable-collection-encoding-test</artifactId>
+  <artifactId>immutable-collection-encodings-test</artifactId>
 
   <properties>
     <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>
@@ -23,7 +23,7 @@
 
     <dependency>
       <groupId>com.hubspot.immutables</groupId>
-      <artifactId>immutable-collection-encoding</artifactId>
+      <artifactId>immutable-collection-encodings</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>

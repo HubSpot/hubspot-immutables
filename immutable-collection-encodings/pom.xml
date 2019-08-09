@@ -8,8 +8,7 @@
     <version>1.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>immutable-collection-encoding</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>immutable-collection-encodings</artifactId>
 
   <properties>
     <basepom.check.skip-checkstyle>true</basepom.check.skip-checkstyle>

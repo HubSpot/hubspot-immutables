@@ -34,7 +34,7 @@
 
     <dependency>
       <groupId>com.hubspot.immutables</groupId>
-      <artifactId>immutable-collection-encoding</artifactId>
+      <artifactId>immutable-collection-encodings</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
