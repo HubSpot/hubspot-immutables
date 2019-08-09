@@ -10,10 +10,6 @@
 
   <artifactId>immutable-collection-encodings</artifactId>
 
-  <properties>
-    <basepom.check.skip-checkstyle>true</basepom.check.skip-checkstyle>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.immutables</groupId>
