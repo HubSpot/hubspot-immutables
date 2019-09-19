@@ -255,8 +255,8 @@ public interface NormalizedWidgetIF {
             .setCleanEmail(getCleanEmail().trim())
             .build();
     }
-    ImmutableConditions.checkValid(!getOptionalBigDecimal().isPresent() || 
-                               getOptionalBigDecimal().get().compareTo(BigDecimal.ZERO) <= 0,
+    ImmutableConditions.checkValid(getOptionalBigDecimal().isPresent() && 
+                               getOptionalBigDecimal().get().compareTo(BigDecimal.ZERO) > 0,
                                "Optional BigDecimal must be greater than zero");
     return this;
   }
