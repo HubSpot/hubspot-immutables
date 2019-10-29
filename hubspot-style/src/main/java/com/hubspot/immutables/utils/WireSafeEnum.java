@@ -1,11 +1,12 @@
 package com.hubspot.immutables.utils;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -39,7 +40,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     return new WireSafeEnum<>(value);
   }
 
-  public static <T extends Enum<T>> WireSafeEnum<T> of(String value, Class<T> enumType) {
+  public static <T extends Enum<T>> WireSafeEnum<T> of(Class<T> enumType, String value) {
     return new WireSafeEnum<>(enumType, value);
   }
 
@@ -66,9 +67,11 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   public static class Deserializer extends JsonDeserializer<WireSafeEnum<?>> implements ContextualDeserializer {
+    private static final Map<Class<?>, JsonDeserializer<WireSafeEnum<?>>> DESERIALIZER_CACHE =
+        new ConcurrentHashMap<>();
 
     @Override
-    public WireSafeEnum<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public WireSafeEnum<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
       throw ctxt.mappingException("Expected createContextual to be called");
     }
 
@@ -91,15 +94,20 @@ public final class WireSafeEnum<T extends Enum<T>> {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Enum<T>> JsonDeserializer<WireSafeEnum<T>> deserializerFor(Class<?> rawType) {
-      Class<T> enumType = (Class<T>) rawType;
-      // TODO cache these in a map?
-      return new JsonDeserializer<WireSafeEnum<T>>() {
+    private static <T extends Enum<T>> JsonDeserializer<?> deserializerFor(Class<?> rawType) {
+      return DESERIALIZER_CACHE.computeIfAbsent(rawType, ignored -> {
+        Class<T> enumType = (Class<T>) rawType;
+        return newDeserializer(enumType);
+      });
+    }
+
+    private static <T extends Enum<T>> JsonDeserializer<WireSafeEnum<?>> newDeserializer(Class<T> enumType) {
+      return new JsonDeserializer<WireSafeEnum<?>>() {
 
         @Override
         public WireSafeEnum<T> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
           if (p.getCurrentToken() == JsonToken.VALUE_STRING) {
-            return WireSafeEnum.of(p.getText(), enumType);
+            return WireSafeEnum.of(enumType, p.getText());
           } else {
             throw ctxt.wrongTokenException(p, JsonToken.VALUE_STRING, null);
           }

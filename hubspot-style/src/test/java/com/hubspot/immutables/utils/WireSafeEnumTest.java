@@ -24,7 +24,7 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromKnownString() {
-    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of("SOURCE", RetentionPolicy.class);
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of(RetentionPolicy.class, "SOURCE");
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("SOURCE");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(RetentionPolicy.SOURCE));
@@ -32,7 +32,7 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromUnknownString() {
-    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of("INVALID", RetentionPolicy.class);
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of(RetentionPolicy.class, "INVALID");
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("INVALID");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
@@ -43,13 +43,13 @@ public class WireSafeEnumTest {
     WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of(RetentionPolicy.SOURCE);
     assertThat(MAPPER.writeValueAsString(wrapper)).isEqualTo("\"SOURCE\"");
 
-    wrapper = WireSafeEnum.of("SOURCE", RetentionPolicy.class);
+    wrapper = WireSafeEnum.of(RetentionPolicy.class, "SOURCE");
     assertThat(MAPPER.writeValueAsString(wrapper)).isEqualTo("\"SOURCE\"");
   }
 
   @Test
   public void itSerializesUnknownValueAsString() throws IOException {
-    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of("INVALID", RetentionPolicy.class);
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of(RetentionPolicy.class, "INVALID");
     assertThat(MAPPER.writeValueAsString(wrapper)).isEqualTo("\"INVALID\"");
   }
 
