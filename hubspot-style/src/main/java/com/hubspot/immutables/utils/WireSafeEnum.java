@@ -45,7 +45,12 @@ public final class WireSafeEnum<T extends Enum<T>> {
     ensureCacheInitialized(enumType);
     WireSafeEnum<?> cached = ENUM_LOOKUP_CACHE.get(enumType).get(value.name());
     if (cached == null) {
-      throw new IllegalStateException("");
+      String message = String.format(
+          "Logic error in caching, no cached value found for %s.%s",
+          enumType,
+          value.name()
+      );
+      throw new IllegalStateException(message);
     } else {
       return (WireSafeEnum<T>) cached;
     }
