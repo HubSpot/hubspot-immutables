@@ -1,6 +1,8 @@
 package com.hubspot.immutables.utils;
 
 import java.io.IOException;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,29 +21,43 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 
 @JsonDeserialize(using = Deserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
+  private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE =
+      new ConcurrentHashMap<>();
+  private static final Map<Class<?>, Map<String, WireSafeEnum<?>>> STRING_LOOKUP_CACHE =
+      new ConcurrentHashMap<>();
+
   private final Class<T> enumType;
   private final String stringValue;
   private final Optional<T> enumValue;
 
-  private WireSafeEnum(Class<T> enumType, String stringValue) {
+  private WireSafeEnum(Class<T> enumType, T value) {
     this.enumType = enumType;
-    this.stringValue = stringValue;
-    this.enumValue = tryParse(enumType, stringValue);
-  }
-
-  @SuppressWarnings("unchecked")
-  private WireSafeEnum(T value) {
-    this.enumType = (Class<T>) value.getClass();
     this.stringValue = value.name();
     this.enumValue = Optional.of(value);
   }
 
-  public static <T extends Enum<T>> WireSafeEnum<T> of(T value) {
-    return new WireSafeEnum<>(value);
+  private WireSafeEnum(Class<T> enumType, String stringValue) {
+    this.enumType = enumType;
+    this.stringValue = stringValue;
+    this.enumValue = Optional.empty();
   }
 
+  @SuppressWarnings("unchecked")
+  public static <T extends Enum<T>> WireSafeEnum<T> of(T value) {
+    Class<T> enumType = (Class<T>) value.getClass();
+    ensureEnumCacheInitialized(enumType);
+    return (WireSafeEnum<T>) ENUM_LOOKUP_CACHE.get(enumType).get(value);
+  }
+
+  @SuppressWarnings("unchecked")
   public static <T extends Enum<T>> WireSafeEnum<T> of(Class<T> enumType, String value) {
-    return new WireSafeEnum<>(enumType, value);
+    ensureStringCacheInitialized(enumType);
+    WireSafeEnum<?> cached = STRING_LOOKUP_CACHE.get(enumType).get(value);
+    if (cached == null) {
+      return new WireSafeEnum<>(enumType, value);
+    } else {
+      return (WireSafeEnum<T>) cached;
+    }
   }
 
   public Class<T> enumType() {
@@ -57,13 +73,30 @@ public final class WireSafeEnum<T extends Enum<T>> {
     return enumValue;
   }
 
-  private static <T extends Enum<T>> Optional<T> tryParse(Class<T> enumType, String stringValue) {
-    // TODO use Guava's Enums#getIfPresent or a similar approach
-    try {
-      return Optional.of(Enum.valueOf(enumType, stringValue));
-    } catch (IllegalArgumentException e) {
-      return Optional.empty();
+  private static <T extends Enum<T>> void ensureEnumCacheInitialized(Class<T> enumType) {
+    if (!ENUM_LOOKUP_CACHE.containsKey(enumType)) {
+      initializeCache(enumType);
     }
+  }
+
+  private static <T extends Enum<T>> void ensureStringCacheInitialized(Class<T> enumType) {
+    if (!STRING_LOOKUP_CACHE.containsKey(enumType)) {
+      initializeCache(enumType);
+    }
+  }
+
+  private static <T extends Enum<T>> void initializeCache(Class<T> enumType) {
+    Map<T, WireSafeEnum<?>> enumMap = new EnumMap<>(enumType);
+    Map<String, WireSafeEnum<?>> stringMap = new HashMap<>();
+
+    for (T value : enumType.getEnumConstants()) {
+      WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(enumType, value);
+      enumMap.put(value, wireSafeEnum);
+      stringMap.put(value.name(), wireSafeEnum);
+    }
+
+    ENUM_LOOKUP_CACHE.put(enumType, enumMap);
+    STRING_LOOKUP_CACHE.put(enumType, stringMap);
   }
 
   public static class Deserializer extends JsonDeserializer<WireSafeEnum<?>> implements ContextualDeserializer {
