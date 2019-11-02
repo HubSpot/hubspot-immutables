@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -77,6 +79,34 @@ public final class WireSafeEnum<T extends Enum<T>> {
     return enumValue;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    } else if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    WireSafeEnum<?> that = (WireSafeEnum<?>) o;
+    return Objects.equals(enumType, that.enumType) &&
+        Objects.equals(jsonValue, that.jsonValue) &&
+        Objects.equals(enumValue, that.enumValue);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(enumType, jsonValue, enumValue);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", "WireSafeEnum[", "]")
+        .add("enumType=" + enumType)
+        .add("jsonValue='" + jsonValue + "'")
+        .add("enumValue=" + enumValue)
+        .toString();
+  }
+
   private static <T extends Enum<T>> void ensureEnumCacheInitialized(Class<T> enumType) {
     if (!ENUM_LOOKUP_CACHE.containsKey(enumType)) {
       initializeCache(enumType);
@@ -92,6 +122,10 @@ public final class WireSafeEnum<T extends Enum<T>> {
   private static <T extends Enum<T>> void initializeCache(Class<T> enumType) {
     T[] enumConstants = enumType.getEnumConstants();
     ArrayNode stringArray = MAPPER.valueToTree(enumConstants);
+    T[] deserializedConstants = MAPPER.convertValue(
+        stringArray,
+        MAPPER.getTypeFactory().constructArrayType(enumType)
+    );
 
     Map<T, WireSafeEnum<?>> enumMap = new EnumMap<>(enumType);
     Map<String, WireSafeEnum<?>> jsonMap = new HashMap<>(mapCapacity(enumConstants.length));
@@ -99,6 +133,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     for (int i = 0; i < enumConstants.length; i++) {
       T enumValue = enumConstants[i];
       JsonNode jsonNode = stringArray.get(i);
+      T deserializedValue = deserializedConstants[i];
 
       final String jsonValue;
       if (jsonNode.isTextual()) {
@@ -114,16 +149,15 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
       WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(enumType, jsonValue, enumValue);
       enumMap.put(enumValue, wireSafeEnum);
-      WireSafeEnum<?> previous = jsonMap.put(jsonValue, wireSafeEnum);
-      if (previous != null) {
-        String message = new StringBuilder()
-            .append("Collision in enum type: " + enumType.getTypeName() + "\n")
-            .append("Constants " + enumValue.name() + " and " + previous.asEnum().get().name() + " ")
-            .append("both serialize as: " + jsonValue + "\n")
-            .append("Enums wrapped in WireSafeEnum must serialize uniquely to JSON")
-            .toString();
-        throw new IllegalStateException(message);
+
+      final WireSafeEnum<T> deserializedVersion;
+      if (enumValue == deserializedValue) {
+        deserializedVersion = wireSafeEnum;
+      } else {
+        deserializedVersion = new WireSafeEnum<>(enumType, jsonValue, deserializedValue);
       }
+
+      jsonMap.put(jsonValue, deserializedVersion);
     }
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);
