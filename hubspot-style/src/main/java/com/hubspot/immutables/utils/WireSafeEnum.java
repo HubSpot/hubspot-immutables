@@ -149,15 +149,9 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
       WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(enumType, jsonValue, enumValue);
       enumMap.put(enumValue, wireSafeEnum);
-
-      final WireSafeEnum<T> deserializedVersion;
       if (enumValue == deserializedValue) {
-        deserializedVersion = wireSafeEnum;
-      } else {
-        deserializedVersion = new WireSafeEnum<>(enumType, jsonValue, deserializedValue);
+        jsonMap.put(jsonValue, wireSafeEnum);
       }
-
-      jsonMap.put(jsonValue, deserializedVersion);
     }
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);
