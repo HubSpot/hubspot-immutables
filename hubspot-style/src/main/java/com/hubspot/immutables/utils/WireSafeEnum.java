@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -37,26 +39,36 @@ public final class WireSafeEnum<T extends Enum<T>> {
   private final Optional<T> enumValue;
 
   private WireSafeEnum(Class<T> enumType, String jsonValue, T enumValue) {
-    this.enumType = enumType;
-    this.jsonValue = jsonValue;
-    this.enumValue = Optional.of(enumValue);
+    this.enumType = checkNotNull(enumType, "enumType");
+    this.jsonValue = checkNotNull(jsonValue, "jsonValue");
+    this.enumValue = Optional.of(checkNotNull(enumValue, "enumValue"));
   }
 
   private WireSafeEnum(Class<T> enumType, String jsonValue) {
-    this.enumType = enumType;
-    this.jsonValue = jsonValue;
+    this.enumType = checkNotNull(enumType, "enumType");
+    this.jsonValue = checkNotNull(jsonValue, "jsonValue");
     this.enumValue = Optional.empty();
   }
 
+  @Nonnull
   @SuppressWarnings("unchecked")
-  public static <T extends Enum<T>> WireSafeEnum<T> fromEnum(T value) {
+  public static <T extends Enum<T>> WireSafeEnum<T> of(@Nonnull T value) {
+    checkNotNull(value, "value");
+
     Class<T> enumType = (Class<T>) value.getClass();
     ensureEnumCacheInitialized(enumType);
     return (WireSafeEnum<T>) ENUM_LOOKUP_CACHE.get(enumType).get(value);
   }
 
+  @Nonnull
   @SuppressWarnings("unchecked")
-  public static <T extends Enum<T>> WireSafeEnum<T> fromJson(Class<T> enumType, String jsonValue) {
+  public static <T extends Enum<T>> WireSafeEnum<T> fromJson(
+      @Nonnull Class<T> enumType,
+      @Nonnull String jsonValue
+  ) {
+    checkNotNull(enumType, "enumType");
+    checkNotNull(jsonValue, "jsonValue");
+
     ensureJsonCacheInitialized(enumType);
     WireSafeEnum<?> cached = JSON_LOOKUP_CACHE.get(enumType).get(jsonValue);
     if (cached == null) {
@@ -66,17 +78,26 @@ public final class WireSafeEnum<T extends Enum<T>> {
     }
   }
 
+  @Nonnull
   public Class<T> enumType() {
     return enumType;
   }
 
+  @Nonnull
   @JsonValue
   public String asString() {
     return jsonValue;
   }
 
+  @Nonnull
   public Optional<T> asEnum() {
     return enumValue;
+  }
+
+  public boolean contains(@Nonnull T value) {
+    checkNotNull(value, "value");
+
+    return enumValue.isPresent() && enumValue.get() == value;
   }
 
   @Override
@@ -105,6 +126,10 @@ public final class WireSafeEnum<T extends Enum<T>> {
         .add("jsonValue='" + jsonValue + "'")
         .add("enumValue=" + enumValue)
         .toString();
+  }
+
+  private static <T> T checkNotNull(T o, String name) {
+    return Objects.requireNonNull(o, name + " must not be null");
   }
 
   private static <T extends Enum<T>> void ensureEnumCacheInitialized(Class<T> enumType) {
