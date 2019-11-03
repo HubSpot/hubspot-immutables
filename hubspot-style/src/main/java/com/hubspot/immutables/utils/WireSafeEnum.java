@@ -122,6 +122,14 @@ public final class WireSafeEnum<T extends Enum<T>> {
   private static <T extends Enum<T>> void initializeCache(Class<T> enumType) {
     T[] enumConstants = enumType.getEnumConstants();
     ArrayNode stringArray = MAPPER.valueToTree(enumConstants);
+    /*
+    Convert the enum constants to JSON and then back, in case this
+    mapping is not bijective. For example, two enum constants might
+    both be aliased to the same JSON value. When we encounter such
+    a JSON value, we'll defer to the enum's deserialization behavior.
+    This should match the behavior if the enum wasn't wrapped in
+    WireSafeEnum.
+     */
     T[] deserializedConstants = MAPPER.convertValue(
         stringArray,
         MAPPER.getTypeFactory().constructArrayType(enumType)
@@ -149,6 +157,10 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
       WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(enumType, jsonValue, enumValue);
       enumMap.put(enumValue, wireSafeEnum);
+      /*
+      If the deserialized value doesn't match, then this enum
+      is probably some sort of alias
+       */
       if (enumValue == deserializedValue) {
         jsonMap.put(jsonValue, wireSafeEnum);
       }
