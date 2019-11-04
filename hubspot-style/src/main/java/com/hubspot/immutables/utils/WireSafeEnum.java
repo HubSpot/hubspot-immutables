@@ -26,6 +26,25 @@ import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 
+/**
+ * This utility is meant to help with the fragility introduced by
+ * using an enum across API boundaries. The most common example is
+ * adding a new enum constant causing clients to explode on
+ * deserialization if they don't have the updated enum definition.
+ *
+ * Instead of using the enum in your models directly, you could instead
+ * wrap the field in a WireSafeEnum. This should be transparent from
+ * a serialization perspective, but will allow you to more gracefully
+ * handle the case of an unknown enum constant. It also stores the JSON
+ * value when deserializaing, and uses that for serialization. This means
+ * that intermedaries preserve, rather than mangle, unknown enum values.
+ *
+ * For the most part WireSafeEnum should be a drop-in replacement, but
+ * there are some things to be aware of:
+ * 1. every enum constant must serialize to JSON as a non-null string 
+ *    (serializing as a number or null is not supported)
+ * 2. enums with custom @JsonCreator logic are poorly/not supported
+ */
 @JsonDeserialize(using = Deserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
   private static final ObjectMapper MAPPER = new ObjectMapper();
