@@ -32,6 +32,11 @@ public class ImmutableListEncoding<T> {
     return ImmutableList.copyOf(elements);
   }
 
+  @Encoding.Of
+  static <T> ImmutableList<T> of(Collection<? extends T> input) {
+    return ImmutableList.copyOf(input);
+  }
+
   @Encoding.Builder
   @SuppressWarnings("UnstableApiUsage")
   static class Builder<T> {
@@ -103,6 +108,5 @@ public class ImmutableListEncoding<T> {
         return ImmutableList.of();
       }
     }
-
   }
 }

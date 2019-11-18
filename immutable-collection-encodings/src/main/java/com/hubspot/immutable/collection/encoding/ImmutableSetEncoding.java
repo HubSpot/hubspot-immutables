@@ -1,6 +1,7 @@
 package com.hubspot.immutable.collection.encoding;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.immutables.encode.Encoding;
@@ -8,6 +9,7 @@ import org.immutables.encode.Encoding.Naming;
 import org.immutables.encode.Encoding.StandardNaming;
 
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 @Encoding
@@ -30,6 +32,11 @@ public class ImmutableSetEncoding<T> {
   @Naming(standard = StandardNaming.WITH)
   ImmutableSet<T> withCollection(Iterable<T> elements) {
     return ImmutableSet.copyOf(elements);
+  }
+
+  @Encoding.Of
+  static <T> ImmutableSet<T> of(Collection<? extends T> input) {
+    return ImmutableSet.copyOf(input);
   }
 
   @Encoding.Builder
@@ -103,6 +110,5 @@ public class ImmutableSetEncoding<T> {
         return ImmutableSet.of();
       }
     }
-
   }
 }

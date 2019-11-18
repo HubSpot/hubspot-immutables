@@ -30,6 +30,11 @@ public class ImmutableMapEncoding<K, V> {
     return ImmutableMap.copyOf(elements);
   }
 
+  @Encoding.Of
+  static <K, V> ImmutableMap<K, V> of(Map<? extends K, ? extends V> input) {
+    return ImmutableMap.copyOf(input);
+  }
+
   @Encoding.Builder
   @SuppressWarnings("UnstableApiUsage")
   static class Builder<K, V> {

@@ -2,6 +2,7 @@ package com.hubspot.immutable.collection.encoding.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -124,6 +125,13 @@ public class ImmutableListEncodingTest {
 
     assertThat(test.getStrings()).isInstanceOf(ImmutableList.class);
     assertThat(test.getStrings()).containsExactlyElementsOf(strings);
+  }
+
+  @Test
+  public void itCanConstructWithParameters() {
+    TestList test = TestList.of(Collections.singleton("testing"));
+
+    assertThat(test.getStrings()).containsExactly("testing");
   }
 
 }

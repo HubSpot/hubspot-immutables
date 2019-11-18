@@ -97,4 +97,13 @@ public class ImmutableMapEncodingTest {
 
     assertThat(test.getStrings()).isSameAs(strings);
   }
+
+  @Test
+  public void itCanConstructWithParameters() {
+    Map<String, String> strings = ImmutableMap.of("testing", "this is a test");
+
+    TestMap test = TestMap.of(strings);
+
+    assertThat(test.getStrings()).isSameAs(strings);
+  }
 }
