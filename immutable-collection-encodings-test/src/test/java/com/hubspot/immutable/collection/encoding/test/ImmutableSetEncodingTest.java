@@ -69,6 +69,15 @@ public class ImmutableSetEncodingTest {
   }
 
   @Test
+  public void itCanAcceptVarargs() {
+    TestSet test = TestSet.builder()
+        .addStrings("testing", "this is a test")
+        .build();
+
+    assertThat(test.getStrings()).containsExactly("testing", "this is a test");
+  }
+
+  @Test
   public void itCanCombineInputImmutableSets() {
     Set<String> strings = ImmutableSet.of("testing", "this is a test");
     Set<String> moreStrings = ImmutableSet.of("more1", "more2");
