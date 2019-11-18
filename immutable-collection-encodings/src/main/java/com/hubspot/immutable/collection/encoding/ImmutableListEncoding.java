@@ -41,7 +41,7 @@ public class ImmutableListEncoding<T> {
 
     @Encoding.Init
     @Encoding.Naming(standard = StandardNaming.ADD)
-    void add(T element) {
+    void add(T... element) {
       if (builder != null) {
         builder.add(element);
       } else if (list != null) {

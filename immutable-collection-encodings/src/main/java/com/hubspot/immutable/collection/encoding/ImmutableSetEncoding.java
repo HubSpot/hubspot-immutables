@@ -41,7 +41,7 @@ public class ImmutableSetEncoding<T> {
 
     @Encoding.Init
     @Naming(standard = StandardNaming.ADD)
-    void add(T element) {
+    void add(T... element) {
       if (builder != null) {
         builder.add(element);
       } else if (set != null) {
