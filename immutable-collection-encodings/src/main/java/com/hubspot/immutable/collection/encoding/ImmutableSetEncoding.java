@@ -28,9 +28,17 @@ public class ImmutableSetEncoding<T> {
     return field;
   }
 
+
   @Encoding.Copy
   @Naming(standard = StandardNaming.WITH)
-  ImmutableSet<T> withCollection(Iterable<T> elements) {
+  ImmutableSet<T> withCollectionVarargs(T... elements) {
+    return ImmutableSet.copyOf(elements);
+  }
+
+
+  @Encoding.Copy
+  @Naming(standard = StandardNaming.WITH)
+  ImmutableSet<T> withCollection(Iterable<? extends T> elements) {
     return ImmutableSet.copyOf(elements);
   }
 
@@ -65,13 +73,13 @@ public class ImmutableSetEncoding<T> {
 
     @Encoding.Init
     @Naming(standard = StandardNaming.ADD_ALL)
-    void addAll(Iterable<T> elements) {
+    void addAll(Iterable<? extends T> elements) {
       if (builder != null) {
         builder.addAll(elements);
       } else if (set != null) {
         int additionalSize = 0;
         if (elements instanceof Collection) {
-          additionalSize = ((Collection<T>) elements).size();
+          additionalSize = ((Collection<? extends T>) elements).size();
         }
 
         builder = ImmutableSet.<T>builderWithExpectedSize(set.size() + additionalSize)
@@ -81,9 +89,9 @@ public class ImmutableSetEncoding<T> {
         set = null;
       } else {
         if (elements instanceof ImmutableCollection) {
-          set(((ImmutableCollection<T>) elements));
+          set(((ImmutableCollection<? extends T>) elements));
         } else if (elements instanceof Collection) {
-          builder = ImmutableSet.builderWithExpectedSize(((Collection<T>) elements).size());
+          builder = ImmutableSet.builderWithExpectedSize(((Collection<? extends T>) elements).size());
           builder.addAll(elements);
         } else {
           builder = ImmutableSet.builder();
@@ -95,7 +103,7 @@ public class ImmutableSetEncoding<T> {
     @Encoding.Init
     @Encoding.Copy
     @Naming(standard = StandardNaming.INIT)
-    void set(Collection<T> input) {
+    void set(Collection<? extends T> input) {
       set = ImmutableSet.copyOf(input);
       builder = null;
     }

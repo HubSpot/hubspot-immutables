@@ -91,6 +91,15 @@ public class ImmutableListEncodingTest {
   }
 
   @Test
+  public void itCanAcceptVarargsWith() {
+    TestList test = TestList.builder()
+        .build()
+        .withStrings("testing", "this is a test");
+
+    assertThat(test.getStrings()).containsExactly("testing", "this is a test");
+  }
+
+  @Test
   public void itCanCombineInputImmutableLists() {
     List<String> strings = ImmutableList.of("testing", "this is a test");
     List<String> moreStrings = ImmutableList.of("more1", "more2");
