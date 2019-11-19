@@ -89,7 +89,7 @@ public class ImmutableSetEncoding<T> {
         set = null;
       } else {
         if (elements instanceof ImmutableCollection) {
-          set(((ImmutableCollection<? extends T>) elements));
+          set(elements);
         } else if (elements instanceof Collection) {
           builder = ImmutableSet.builderWithExpectedSize(((Collection<? extends T>) elements).size());
           builder.addAll(elements);
@@ -103,7 +103,7 @@ public class ImmutableSetEncoding<T> {
     @Encoding.Init
     @Encoding.Copy
     @Naming(standard = StandardNaming.INIT)
-    void set(Collection<? extends T> input) {
+    void set(Iterable<? extends T> input) {
       set = ImmutableSet.copyOf(input);
       builder = null;
     }

@@ -82,6 +82,17 @@ public class ImmutableListEncodingTest {
   }
 
   @Test
+  public void itCanAcceptIterable() {
+    Iterable<String> strings = Lists.newArrayList("testing", "this is a test");
+
+    TestList test = TestList.builder()
+        .addAllStrings(strings)
+        .build();
+
+    assertThat(test.getStrings()).containsExactly("testing", "this is a test");
+  }
+
+  @Test
   public void itCanAcceptVarargs() {
     TestList test = TestList.builder()
         .addStrings("testing", "this is a test")

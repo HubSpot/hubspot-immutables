@@ -8,6 +8,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class ImmutableSetEncodingTest {
@@ -67,6 +68,17 @@ public class ImmutableSetEncodingTest {
         .build();
 
     assertThat(test.getStrings()).containsExactlyInAnyOrder("testing", "this is a test");
+  }
+
+  @Test
+  public void itCanAcceptIterable() {
+    Iterable<String> strings = Lists.newArrayList("testing", "this is a test");
+
+    TestSet test = TestSet.builder()
+        .addAllStrings(strings)
+        .build();
+
+    assertThat(test.getStrings()).containsExactly("testing", "this is a test");
   }
 
   @Test
