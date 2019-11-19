@@ -41,7 +41,7 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
  *
  * For the most part WireSafeEnum should be a drop-in replacement, but
  * there are some things to be aware of:
- * 1. every enum constant must serialize to JSON as a non-null string 
+ * 1. every enum constant must serialize to JSON as a non-null string
  *    (serializing as a number or null is not supported)
  * 2. enums with custom @JsonCreator logic are poorly/not supported
  */
