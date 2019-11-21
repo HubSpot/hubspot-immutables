@@ -43,7 +43,7 @@ public class ImmutableSetEncoding<T> {
   }
 
   @Encoding.Of
-  static <T> ImmutableSet<T> of(Collection<? extends T> input) {
+  static <T> ImmutableSet<T> of(Iterable<? extends T> input) {
     return ImmutableSet.copyOf(input);
   }
 

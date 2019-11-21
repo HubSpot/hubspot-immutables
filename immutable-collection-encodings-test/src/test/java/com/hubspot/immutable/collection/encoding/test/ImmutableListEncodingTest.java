@@ -2,11 +2,15 @@ package com.hubspot.immutable.collection.encoding.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -99,6 +103,12 @@ public class ImmutableListEncodingTest {
         .build();
 
     assertThat(test.getStrings()).containsExactly("testing", "this is a test");
+
+    TestList test2 = TestList.builder()
+        .addStrings("testing")
+        .build();
+
+    assertThat(test2.getStrings()).containsExactly("testing");
   }
 
   @Test
@@ -108,6 +118,12 @@ public class ImmutableListEncodingTest {
         .withStrings("testing", "this is a test");
 
     assertThat(test.getStrings()).containsExactly("testing", "this is a test");
+
+    TestList test2 = TestList.builder()
+        .build()
+        .withStrings("testing");
+
+    assertThat(test2.getStrings()).containsExactly("testing");
   }
 
   @Test
@@ -152,6 +168,20 @@ public class ImmutableListEncodingTest {
     TestList test = TestList.of(Collections.singleton("testing"));
 
     assertThat(test.getStrings()).containsExactly("testing");
+  }
+
+  @Test
+  @Ignore
+  public void itCanSerializeAndDeserializeToJson() throws IOException {
+    String expectedJson = "{\"strings\":[\"testing\"]}";
+    ObjectMapper mapper = new ObjectMapper();
+
+    TestList test = TestList.of(Collections.singleton("testing"));
+    assertThat(mapper.writeValueAsString(test)).isEqualToIgnoringWhitespace(expectedJson);
+
+    TestList deser = mapper.readValue(expectedJson, TestList.class);
+
+    assertThat(deser).isEqualTo(test);
   }
 
 }

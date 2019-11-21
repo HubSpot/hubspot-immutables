@@ -17,6 +17,7 @@ public class ImmutableListEncoding<T> {
   private ImmutableList<T> field = ImmutableList.of();
 
   @Encoding.Expose
+  @Encoding.Naming("getImmutable*")
   ImmutableList<T> getImmutableList() {
     return field;
   }
@@ -39,7 +40,7 @@ public class ImmutableListEncoding<T> {
   }
 
   @Encoding.Of
-  static <T> ImmutableList<T> of(Collection<? extends T> input) {
+  static <T> ImmutableList<T> of(Iterable<? extends T> input) {
     return ImmutableList.copyOf(input);
   }
 

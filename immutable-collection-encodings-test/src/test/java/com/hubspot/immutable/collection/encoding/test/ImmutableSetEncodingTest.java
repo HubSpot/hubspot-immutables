@@ -2,11 +2,14 @@ package com.hubspot.immutable.collection.encoding.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -141,6 +144,20 @@ public class ImmutableSetEncodingTest {
     TestSet test = TestSet.of(Collections.singleton("testing"));
 
     assertThat(test.getStrings()).containsExactly("testing");
+  }
+
+  @Test
+  @Ignore
+  public void itCanSerializeAndDeserializeToJson() throws IOException {
+    String expectedJson = "{\"strings\":[\"testing\"]}";
+    ObjectMapper mapper = new ObjectMapper();
+
+    TestSet test = TestSet.of(Collections.singleton("testing"));
+    assertThat(mapper.writeValueAsString(test)).isEqualToIgnoringWhitespace(expectedJson);
+
+    TestSet deser = mapper.readValue(expectedJson, TestSet.class);
+
+    assertThat(deser).isEqualTo(test);
   }
 
 }
