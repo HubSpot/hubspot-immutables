@@ -1,7 +1,9 @@
 package com.hubspot.immutables.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
@@ -343,5 +345,32 @@ public class WireSafeEnumTest {
     assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
     assertThat(wrapper.asString()).isEqualTo("ABC");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
+  }
+
+  @Test
+  public void itThrowsForValueFromUnknownString() {
+    WireSafeEnum<RetentionPolicy> wrapper =
+        WireSafeEnum.fromJson(RetentionPolicy.class, "INVALID");
+    assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
+    assertThat(wrapper.asString()).isEqualTo("INVALID");
+
+    assertThatThrownBy(wrapper::asEnumOrThrow)
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Value 'INVALID' is not valid for enum of type 'RetentionPolicy'. Valid values are: [CLASS, RUNTIME, SOURCE]");
+  }
+
+  @Test
+  public void itDoesNotThrowForValueFromKnownString() {
+    WireSafeEnum<RetentionPolicy> wrapper =
+        WireSafeEnum.fromJson(RetentionPolicy.class, "SOURCE");
+    assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
+    assertThat(wrapper.asString()).isEqualTo("SOURCE");
+
+    try {
+      assertThat(wrapper.asEnumOrThrow())
+          .isEqualTo(RetentionPolicy.SOURCE);
+    } catch (IllegalStateException e) {
+      fail("IllegalStateException should not have been thrown", e);
+    }
   }
 }
