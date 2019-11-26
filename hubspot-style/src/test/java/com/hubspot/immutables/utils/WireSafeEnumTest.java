@@ -3,7 +3,6 @@ package com.hubspot.immutables.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.assertj.core.api.Assertions.fail;
 
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
@@ -366,11 +365,7 @@ public class WireSafeEnumTest {
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("SOURCE");
 
-    try {
-      assertThat(wrapper.asEnumOrThrow())
-          .isEqualTo(RetentionPolicy.SOURCE);
-    } catch (IllegalStateException e) {
-      fail("IllegalStateException should not have been thrown", e);
-    }
+    assertThat(wrapper.asEnumOrThrow())
+        .isEqualTo(RetentionPolicy.SOURCE);
   }
 }
