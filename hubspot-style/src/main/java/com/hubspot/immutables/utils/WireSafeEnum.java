@@ -1,6 +1,7 @@
 package com.hubspot.immutables.utils;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +52,8 @@ public final class WireSafeEnum<T extends Enum<T>> {
   private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE =
       new ConcurrentHashMap<>();
   private static final Map<Class<?>, Map<String, WireSafeEnum<?>>> JSON_LOOKUP_CACHE =
+      new ConcurrentHashMap<>();
+  private static final Map<Class<?>, String> VALID_MEMBERS_CACHE =
       new ConcurrentHashMap<>();
 
   private final Class<T> enumType;
@@ -113,6 +116,21 @@ public final class WireSafeEnum<T extends Enum<T>> {
     return enumValue;
   }
 
+  @Nonnull
+  public T asEnumOrThrow() {
+    return asEnum()
+        .orElseThrow(this::getInvalidValueException);
+  }
+
+  private IllegalStateException getInvalidValueException() {
+    ensureValidMembersCacheInitialized(enumType);
+
+    String message = String.format("Value '%s' is not valid for enum of type '%s'. Valid values are: %s",
+        jsonValue, enumType.getSimpleName(), VALID_MEMBERS_CACHE.get(enumType));
+
+    return new IllegalStateException(message);
+  }
+
   public boolean contains(@Nonnull T value) {
     checkNotNull(value, "value");
 
@@ -159,6 +177,12 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
   private static <T extends Enum<T>> void ensureJsonCacheInitialized(Class<T> enumType) {
     if (!JSON_LOOKUP_CACHE.containsKey(enumType)) {
+      initializeCache(enumType);
+    }
+  }
+
+  private static <T extends Enum<T>> void ensureValidMembersCacheInitialized(Class<T> enumType) {
+    if (!VALID_MEMBERS_CACHE.containsKey(enumType)) {
       initializeCache(enumType);
     }
   }
@@ -212,6 +236,14 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);
     JSON_LOOKUP_CACHE.put(enumType, jsonMap);
+
+    String validMembers = Arrays.toString(jsonMap.values().stream()
+        .map(WireSafeEnum::asString)
+        .distinct()
+        .sorted()
+        .toArray());
+
+    VALID_MEMBERS_CACHE.put(enumType, validMembers);
   }
 
   // adapted from Guava
