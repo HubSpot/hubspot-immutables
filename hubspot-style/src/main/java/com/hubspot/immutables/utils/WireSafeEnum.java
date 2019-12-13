@@ -128,8 +128,6 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   private IllegalStateException getInvalidValueException() {
-    ensureJsonCacheInitialized(enumType);
-
     Collection<WireSafeEnum<?>> wiresafeEnumTypes = JSON_LOOKUP_CACHE.get(enumType).values();
     String validMembers = Arrays.toString(wiresafeEnumTypes.stream()
         .map(WireSafeEnum::asString)
