@@ -47,6 +47,9 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
  * 1. every enum constant must serialize to JSON as a non-null string
  *    (serializing as a number or null is not supported)
  * 2. enums with custom @JsonCreator logic are poorly/not supported
+ * 3. T and WireSafeEnum<T> are different types so migrating is a 
+ *    breaking change from a code perspective and Java code usages
+ *    of the field will need to get updated
  */
 @JsonDeserialize(using = Deserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
