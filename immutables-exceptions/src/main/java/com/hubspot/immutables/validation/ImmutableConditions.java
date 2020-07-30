@@ -12,7 +12,8 @@ public class ImmutableConditions {
     }
   }
 
-  public static @Nonnull <T> T checkNotNull(T ref, String template, Object... arguments) {
+  @Nonnull
+  public static <T> T checkNotNull(T ref, String template, Object... arguments) {
     checkValid(ref != null, template, arguments);
     return ref;
   }
