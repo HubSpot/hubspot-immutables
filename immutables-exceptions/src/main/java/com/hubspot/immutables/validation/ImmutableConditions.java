@@ -2,6 +2,8 @@ package com.hubspot.immutables.validation;
 
 import java.util.Optional;
 
+import javax.annotation.Nonnull;
+
 public class ImmutableConditions {
 
   public static void checkValid(boolean expression, String template, Object... arguments) {
@@ -10,7 +12,7 @@ public class ImmutableConditions {
     }
   }
 
-  public static <T> T checkNotNull(T ref, String template, Object... arguments) {
+  public static @Nonnull <T> T checkNotNull(T ref, String template, Object... arguments) {
     checkValid(ref != null, template, arguments);
     return ref;
   }
