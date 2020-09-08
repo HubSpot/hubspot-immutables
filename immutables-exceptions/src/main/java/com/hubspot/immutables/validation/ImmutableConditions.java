@@ -1,5 +1,6 @@
 package com.hubspot.immutables.validation;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
@@ -10,6 +11,14 @@ public class ImmutableConditions {
     if (!expression) {
       throw new InvalidImmutableStateException(String.format(template, arguments));
     }
+  }
+
+  public static void checkNotEmpty(Collection<?> collection, String template, Object... arguments) {
+    checkValid(!collection.isEmpty(), template, arguments);
+  }
+
+  public static void checkNotEmpty(String string, String template, Object... arguments) {
+    checkValid(!string.isEmpty(), template, arguments);
   }
 
   @Nonnull
