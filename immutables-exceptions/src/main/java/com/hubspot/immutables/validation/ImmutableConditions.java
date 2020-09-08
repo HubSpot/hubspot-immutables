@@ -14,15 +14,11 @@ public class ImmutableConditions {
   }
 
   public static void checkNotEmpty(Collection<?> collection, String template, Object... arguments) {
-    if (collection.isEmpty()) {
-      throw new InvalidImmutableStateException(String.format(template, arguments));
-    }
+    checkValid(!collection.isEmpty(), template, arguments);
   }
 
   public static void checkNotEmpty(String string, String template, Object... arguments) {
-    if (string.isEmpty()) {
-      throw new InvalidImmutableStateException(String.format(template, arguments));
-    }
+    checkValid(!string.isEmpty(), template, arguments);
   }
 
   @Nonnull
