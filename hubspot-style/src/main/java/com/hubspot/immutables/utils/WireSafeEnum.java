@@ -1,6 +1,7 @@
 package com.hubspot.immutables.utils;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -52,7 +53,8 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
  *    of the field will need to get updated
  */
 @JsonDeserialize(using = Deserializer.class)
-public final class WireSafeEnum<T extends Enum<T>> {
+public final class WireSafeEnum<T extends Enum<T>> implements Serializable {
+  private static final long serialVersionUID = 42000404L;
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE =
       new ConcurrentHashMap<>();
@@ -61,18 +63,18 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
   private final Class<T> enumType;
   private final String jsonValue;
-  private final Optional<T> enumValue;
+  private final T enumValue;
 
   private WireSafeEnum(Class<T> enumType, String jsonValue, T enumValue) {
     this.enumType = checkNotNull(enumType, "enumType");
     this.jsonValue = checkNotNull(jsonValue, "jsonValue");
-    this.enumValue = Optional.of(checkNotNull(enumValue, "enumValue"));
+    this.enumValue = checkNotNull(enumValue, "enumValue");
   }
 
   private WireSafeEnum(Class<T> enumType, String jsonValue) {
     this.enumType = checkNotNull(enumType, "enumType");
     this.jsonValue = checkNotNull(jsonValue, "jsonValue");
-    this.enumValue = Optional.empty();
+    this.enumValue = null;
   }
 
   @Nonnull
@@ -116,7 +118,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
   @Nonnull
   public Optional<T> asEnum() {
-    return enumValue;
+    return Optional.ofNullable(enumValue);
   }
 
   @Nonnull
@@ -147,7 +149,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
   public boolean contains(@Nonnull T value) {
     checkNotNull(value, "value");
 
-    return enumValue.isPresent() && enumValue.get() == value;
+    return enumValue == value;
   }
 
   @Override

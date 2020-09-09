@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Optional;
 
@@ -393,17 +394,5 @@ public class WireSafeEnumTest {
     TestClass roundtripObject = (TestClass) object;
     assertThat(roundtripObject.getCustomJsonEnum().asEnum()).isPresent();
     assertThat(roundtripObject.getCustomJsonEnum().asEnum().get()).isEqualTo(CustomJsonEnum.ABC);
-  }
-
-  class TestClass {
-    private WireSafeEnum<CustomJsonEnum> customJsonEnum;
-
-    public TestClass(CustomJsonEnum customJsonEnum) {
-      this.customJsonEnum = WireSafeEnum.of(customJsonEnum);
-    }
-
-    public WireSafeEnum<CustomJsonEnum> getCustomJsonEnum() {
-      return customJsonEnum;
-    }
   }
 }
