@@ -306,9 +306,6 @@ so it looks like something below:
       <artifactId>maven-compiler-plugin</artifactId>
       <version>3.3</version>
       <configuration>
-        <compilerVersion>1.8</compilerVersion>
-        <source>1.8</source>
-        <target>1.8</target>
         <compilerArguments>
           <Xmaxerrs>1000000</Xmaxerrs>
         </compilerArguments>

@@ -1,6 +1,8 @@
 package com.hubspot.immutables.utils;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 
@@ -44,6 +47,9 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
  * 1. every enum constant must serialize to JSON as a non-null string
  *    (serializing as a number or null is not supported)
  * 2. enums with custom @JsonCreator logic are poorly/not supported
+ * 3. T and WireSafeEnum<T> are different types so migrating is a
+ *    breaking change from a code perspective and Java code usages
+ *    of the field will need to get updated
  */
 @JsonDeserialize(using = Deserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
@@ -111,6 +117,31 @@ public final class WireSafeEnum<T extends Enum<T>> {
   @Nonnull
   public Optional<T> asEnum() {
     return enumValue;
+  }
+
+  @Nonnull
+  public <X extends Throwable> T asEnumOrThrow(Supplier<? extends X> exceptionSupplier) throws X {
+    return asEnum()
+        .orElseThrow(exceptionSupplier);
+  }
+
+  @Nonnull
+  public T asEnumOrThrow() {
+    return asEnumOrThrow(this::getInvalidValueException);
+  }
+
+  private IllegalStateException getInvalidValueException() {
+    Collection<WireSafeEnum<?>> wiresafeEnumTypes = JSON_LOOKUP_CACHE.get(enumType).values();
+    String validMembers = Arrays.toString(wiresafeEnumTypes.stream()
+        .map(WireSafeEnum::asString)
+        .distinct()
+        .sorted()
+        .toArray());
+
+    String message = String.format("Value '%s' is not valid for enum of type '%s'. Valid values are: %s",
+        jsonValue, enumType.getSimpleName(), validMembers);
+
+    return new IllegalStateException(message);
   }
 
   public boolean contains(@Nonnull T value) {
