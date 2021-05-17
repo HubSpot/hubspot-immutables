@@ -35,11 +35,7 @@
       <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutables-exceptions</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.hubspot.immutables</groupId>
-      <artifactId>immutable-collection-encodings</artifactId>
-    </dependency>
-    
+
     <dependency>
       <groupId>org.immutables</groupId>
       <artifactId>value</artifactId>
