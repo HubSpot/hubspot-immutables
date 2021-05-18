@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.common.collect.ImmutableSet;
+import com.hubspot.immutables.model.WidgetGuava;
 import com.hubspot.immutables.validation.InvalidImmutableStateException;
 import com.hubspot.immutables.model.Foo;
 import com.hubspot.immutables.model.FooEgg;
@@ -28,6 +30,16 @@ import com.hubspot.rosetta.Rosetta;
 public class ImmutablesTest {
 
   private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new GuavaModule());
+
+  @Test
+  public void itUsesImmutableEncodings() {
+    WidgetGuava widgetGuava = WidgetGuava.builder()
+        .setAnInt(1)
+        .addSomeOtherVals("test", "test2")
+        .build();
+
+    assertThat(widgetGuava.getSomeVals()).isInstanceOf(ImmutableSet.class);
+  }
 
   @Test
   public void itGeneratesFromAbstract() {
