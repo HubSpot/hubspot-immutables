@@ -29,4 +29,4 @@ import com.hubspot.immutables.validation.InvalidImmutableStateException;
 @ImmutableSetEncodingEnabled
 @ImmutableListEncodingEnabled
 @ImmutableMapEncodingEnabled
-public @interface HubSpotGuavaStyle {}
+public @interface HubSpotImmutableStyle {}

@@ -6,10 +6,10 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 import com.google.common.collect.ImmutableSet;
-import com.hubspot.immutables.style.HubSpotGuavaStyle;
+import com.hubspot.immutables.style.HubSpotImmutableStyle;
 import com.hubspot.immutables.validation.ImmutableConditions;
 
-@HubSpotGuavaStyle
+@HubSpotImmutableStyle
 @Value.Immutable
 public interface WidgetGuavaIF {
   Optional<String> getAnOptionalString();
