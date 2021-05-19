@@ -35,6 +35,10 @@
       <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutable-collection-encodings</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.immutables</groupId>
