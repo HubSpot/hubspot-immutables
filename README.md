@@ -243,7 +243,7 @@ An example is below:
 @HubSpotStyle
 @Value.Immutable
 public interface NormalizedWidgetIF {
-  BigDecimal getOptionalBigDecimal();
+  Optional<BigDecimal> getOptionalBigDecimal();
   String getCleanEmail();
 
   @Value.Check
@@ -255,7 +255,7 @@ public interface NormalizedWidgetIF {
             .setCleanEmail(getCleanEmail().trim())
             .build();
     }
-    ImmutableConditions.checkValid(!getOptionalBigDecimal().isPresent() || 
+    ImmutableConditions.checkValid(getOptionalBigDecimal().isPresent() && 
                                getOptionalBigDecimal().get().compareTo(BigDecimal.ZERO) > 0,
                                "Optional BigDecimal must be greater than zero");
     return this;
