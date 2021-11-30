@@ -273,9 +273,9 @@ public interface NormalizedWidgetIF {
 ### Setup Intellij for `Immutables`
 *Based on https://immutables.github.io/apt.html#intellij-idea*
 
-To work with `Immutables` you must enable anotation processing. To do so globally follow these steps:
+To work with `Immutables` you must enable annotation processing. To do so globally follow these steps:
 
-1. Go to *File &rarr; Other Settings &rarr; Default Settings*
+1. Go to *File &rarr; New Project Setup &rarr; Preferences for New Projects...* (This varies with IntelliJ versions)
 2. Under *Compiler &rarr; Annotation Processors* toggle `Enable annotation processing`
 3. Set `Store generated sources relative to:` to `Module content root`
 4. Set the sources directories to `target/generated-sources/annotations` and
