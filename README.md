@@ -304,7 +304,6 @@ so it looks like something below:
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-compiler-plugin</artifactId>
-      <version>3.3</version>
       <configuration>
         <compilerArguments>
           <Xmaxerrs>1000000</Xmaxerrs>
