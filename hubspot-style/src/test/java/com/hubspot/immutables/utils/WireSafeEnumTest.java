@@ -76,7 +76,7 @@ public class WireSafeEnumTest {
     }
   }
 
-  public enum SubclassedEnum {
+  public enum EnumWithOverride {
     ABC,
     DEF {
       @Override
@@ -92,12 +92,12 @@ public class WireSafeEnumTest {
   }
 
   @Test
-  public void itHandlesSubclassedEnums() {
-    WireSafeEnum<SubclassedEnum> abc = WireSafeEnum.of(SubclassedEnum.ABC);
-    WireSafeEnum<SubclassedEnum> def = WireSafeEnum.of(SubclassedEnum.DEF);
+  public void itHandlesEnumsWithOverrides() {
+    WireSafeEnum<EnumWithOverride> abc = WireSafeEnum.of(EnumWithOverride.ABC);
+    WireSafeEnum<EnumWithOverride> def = WireSafeEnum.of(EnumWithOverride.DEF);
 
-    assertThat(abc.asEnum()).contains(SubclassedEnum.ABC);
-    assertThat(def.asEnum()).contains(SubclassedEnum.DEF);
+    assertThat(abc.asEnum()).contains(EnumWithOverride.ABC);
+    assertThat(def.asEnum()).contains(EnumWithOverride.DEF);
   }
 
   @Test
