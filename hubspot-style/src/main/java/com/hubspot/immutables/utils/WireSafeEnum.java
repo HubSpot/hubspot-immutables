@@ -80,7 +80,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
   public static <T extends Enum<T>> WireSafeEnum<T> of(@Nonnull T value) {
     checkNotNull(value, "value");
 
-    Class<T> enumType = (Class<T>) value.getClass();
+    Class<T> enumType = getRealEnumType((Class<T>) value.getClass());
     ensureEnumCacheInitialized(enumType);
     return (WireSafeEnum<T>) ENUM_LOOKUP_CACHE.get(enumType).get(value);
   }
@@ -94,6 +94,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     checkNotNull(enumType, "enumType");
     checkNotNull(jsonValue, "jsonValue");
 
+    enumType = getRealEnumType(enumType);
     ensureJsonCacheInitialized(enumType);
     WireSafeEnum<?> cached = JSON_LOOKUP_CACHE.get(enumType).get(jsonValue);
     if (cached == null) {
@@ -243,6 +244,24 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);
     JSON_LOOKUP_CACHE.put(enumType, jsonMap);
+  }
+
+  private static <T extends Enum<T>> Class<T> getRealEnumType(Class<T> enumType) {
+    Class<?> superType = enumType.getSuperclass();
+    if (Enum.class.equals(superType)) {
+      return enumType;
+    }
+    // In cases where the enum constant passed in overrides a method on the enum,
+    // the class received here may be a subclass of the enum's actual type, which
+    // does not have access to the enum's declared constants, so we coerce that type
+    // into the supertype that was actually declared
+    if (superType == null || !Enum.class.equals(superType.getSuperclass()) || !superType.equals(enumType.getEnclosingClass())) {
+      throw new IllegalArgumentException("Provided type is not an enum or a direct subclass of an enum");
+    }
+
+    @SuppressWarnings("unchecked")
+    Class<T> widenedType = (Class<T>) superType;
+    return widenedType;
   }
 
   // adapted from Guava

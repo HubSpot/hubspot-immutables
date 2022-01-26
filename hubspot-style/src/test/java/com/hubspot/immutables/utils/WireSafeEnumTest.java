@@ -76,6 +76,30 @@ public class WireSafeEnumTest {
     }
   }
 
+  public enum SubclassedEnum {
+    ABC,
+    DEF {
+      @Override
+      public String getSomething() {
+        return "b";
+      }
+    }
+    ;
+
+    public String getSomething() {
+      return "a";
+    }
+  }
+
+  @Test
+  public void itHandlesSubclassedEnums() {
+    WireSafeEnum<SubclassedEnum> abc = WireSafeEnum.of(SubclassedEnum.ABC);
+    WireSafeEnum<SubclassedEnum> def = WireSafeEnum.of(SubclassedEnum.DEF);
+
+    assertThat(abc.asEnum()).contains(SubclassedEnum.ABC);
+    assertThat(def.asEnum()).contains(SubclassedEnum.DEF);
+  }
+
   @Test
   public void itParsesNullAsNull() throws IOException {
     WireSafeEnum<RetentionPolicy> wrapper = MAPPER.readValue(
