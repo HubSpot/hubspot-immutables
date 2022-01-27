@@ -76,6 +76,30 @@ public class WireSafeEnumTest {
     }
   }
 
+  public enum EnumWithOverride {
+    ABC,
+    DEF {
+      @Override
+      public String getSomething() {
+        return "b";
+      }
+    }
+    ;
+
+    public String getSomething() {
+      return "a";
+    }
+  }
+
+  @Test
+  public void itHandlesEnumsWithOverrides() {
+    WireSafeEnum<EnumWithOverride> abc = WireSafeEnum.of(EnumWithOverride.ABC);
+    WireSafeEnum<EnumWithOverride> def = WireSafeEnum.of(EnumWithOverride.DEF);
+
+    assertThat(abc.asEnum()).contains(EnumWithOverride.ABC);
+    assertThat(def.asEnum()).contains(EnumWithOverride.DEF);
+  }
+
   @Test
   public void itParsesNullAsNull() throws IOException {
     WireSafeEnum<RetentionPolicy> wrapper = MAPPER.readValue(
