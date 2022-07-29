@@ -39,7 +39,7 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
  * wrap the field in a WireSafeEnum. This should be transparent from
  * a serialization perspective, but will allow you to more gracefully
  * handle the case of an unknown enum constant. It also stores the JSON
- * value when deserializaing, and uses that for serialization. This means
+ * value when deserializing, and uses that for serialization. This means
  * that intermedaries preserve, rather than mangle, unknown enum values.
  *
  * For the most part WireSafeEnum should be a drop-in replacement, but
