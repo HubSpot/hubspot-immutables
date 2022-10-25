@@ -240,6 +240,15 @@ public final class WireSafeEnum<T extends Enum<T>> {
       if (enumValue == deserializedValue) {
         jsonMap.put(jsonValue, wireSafeEnum);
       }
+
+      if (enumValue instanceof WireSafeEnumAlternativeJsonInputValue) {
+        String alternativeJsonInputValue = ((WireSafeEnumAlternativeJsonInputValue) enumValue).getExtraJsonInputValue();
+        if (alternativeJsonInputValue != null && !alternativeJsonInputValue.isEmpty() && !alternativeJsonInputValue.equals(jsonValue)) {
+          WireSafeEnum<T> wireSafeEnumForAlternativeInput = new WireSafeEnum<>(enumType, alternativeJsonInputValue, enumValue);
+          enumMap.put(enumValue, wireSafeEnumForAlternativeInput);
+          jsonMap.put(alternativeJsonInputValue, wireSafeEnumForAlternativeInput);
+        }
+      }
     }
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);

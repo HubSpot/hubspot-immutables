@@ -91,6 +91,16 @@ public class WireSafeEnumTest {
     }
   }
 
+  public enum EnumWithAlternativeJson implements WireSafeEnumAlternativeJsonInputValue {
+    ABC,
+    DEF;
+
+    @Override
+    public String getExtraJsonInputValue() {
+      return name().toLowerCase();
+    }
+  }
+
   @Test
   public void itHandlesEnumsWithOverrides() {
     WireSafeEnum<EnumWithOverride> abc = WireSafeEnum.of(EnumWithOverride.ABC);
@@ -391,5 +401,16 @@ public class WireSafeEnumTest {
 
     assertThat(wrapper.asEnumOrThrow())
         .isEqualTo(RetentionPolicy.SOURCE);
+  }
+
+  @Test
+  public void itDeserializesFromAlternativeJsonValue() {
+    WireSafeEnum<EnumWithAlternativeJson> wrapperForStandard =
+        WireSafeEnum.fromJson(EnumWithAlternativeJson.class, EnumWithAlternativeJson.DEF.name());
+    WireSafeEnum<EnumWithAlternativeJson> wrapperForAlternative =
+        WireSafeEnum.fromJson(EnumWithAlternativeJson.class, EnumWithAlternativeJson.DEF.getExtraJsonInputValue());
+    assertThat(wrapperForAlternative.asEnumOrThrow())
+            .isEqualTo(wrapperForStandard.asEnumOrThrow())
+            .isEqualTo(EnumWithAlternativeJson.DEF);
   }
 }
