@@ -3,17 +3,14 @@ package com.hubspot.immutables.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
-
-import java.io.IOException;
-import java.lang.annotation.RetentionPolicy;
-import java.util.Optional;
-
-import org.junit.Test;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Optional;
+import org.junit.Test;
 
 public class WireSafeEnumTest {
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -88,6 +85,23 @@ public class WireSafeEnumTest {
 
     public String getSomething() {
       return "a";
+    }
+  }
+
+  public enum EnumWithMultipleSerializedForms {
+    ABC,
+    DEF,
+    ;
+
+    @JsonCreator
+    public static EnumWithMultipleSerializedForms fromString(String s) {
+      if (s.equalsIgnoreCase(ABC.name())) {
+        return ABC;
+      } else if (s.equalsIgnoreCase(DEF.name())) {
+        return DEF;
+      } else {
+        throw new IllegalArgumentException("Unknown value: " + s);
+      }
     }
   }
 
@@ -392,4 +406,24 @@ public class WireSafeEnumTest {
     assertThat(wrapper.asEnumOrThrow())
         .isEqualTo(RetentionPolicy.SOURCE);
   }
+
+  @Test
+  public void itDelegatesToJsonCreatorIfNotCached() throws Exception {
+    WireSafeEnum<EnumWithMultipleSerializedForms> wrapper = MAPPER.readValue(
+        "\"ABC\"",
+        new TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>>() {}
+    );
+    assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
+    assertThat(wrapper.asString()).isEqualTo("ABC");
+    assertThat(wrapper.asEnum()).contains(EnumWithMultipleSerializedForms.ABC);
+
+    wrapper = MAPPER.readValue(
+        "\"abc\"",
+        new TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>>() {}
+    );
+    assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
+    assertThat(wrapper.asString()).isEqualTo("abc");
+    assertThat(wrapper.asEnum()).contains(EnumWithMultipleSerializedForms.ABC);
+  }
+
 }
