@@ -409,21 +409,27 @@ public class WireSafeEnumTest {
 
   @Test
   public void itDelegatesToJsonCreatorIfNotCached() throws Exception {
-    WireSafeEnum<EnumWithMultipleSerializedForms> wrapper = MAPPER.readValue(
-        "\"ABC\"",
-        new TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>>() {}
-    );
-    assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
-    assertThat(wrapper.asString()).isEqualTo("ABC");
-    assertThat(wrapper.asEnum()).contains(EnumWithMultipleSerializedForms.ABC);
+    TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>> type = new TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>>() {};
 
-    wrapper = MAPPER.readValue(
-        "\"abc\"",
-        new TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>>() {}
-    );
+    WireSafeEnum<EnumWithMultipleSerializedForms> wrapper = MAPPER.readValue("\"ABC\"", type);
+    assertCorrectEnum(wrapper, "ABC", EnumWithMultipleSerializedForms.ABC);
+
+    wrapper = MAPPER.readValue("\"abc\"", type);
+    assertCorrectEnum(wrapper, "abc", EnumWithMultipleSerializedForms.ABC);
+
+    wrapper = MAPPER.readValue("\"def\"", type);
+    assertCorrectEnum(wrapper, "def", EnumWithMultipleSerializedForms.DEF);
+
+    wrapper = MAPPER.readValue("\"xyz\"", type);
     assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
-    assertThat(wrapper.asString()).isEqualTo("abc");
-    assertThat(wrapper.asEnum()).contains(EnumWithMultipleSerializedForms.ABC);
+    assertThat(wrapper.asString()).isEqualTo("xyz");
+    assertThat(wrapper.asEnum()).isEmpty();
   }
 
+  private <T extends Enum<T>> void assertCorrectEnum(WireSafeEnum<?> wrapper, String stringValue, T enumValue) {
+    assertThat(wrapper.enumType()).isEqualTo(enumValue.getClass());
+    assertThat(wrapper.asString()).isEqualTo(stringValue);
+    assertThat(wrapper.asEnum().isPresent()).isTrue();
+    assertThat(wrapper.asEnum().get()).isEqualTo(enumValue);
+  }
 }
