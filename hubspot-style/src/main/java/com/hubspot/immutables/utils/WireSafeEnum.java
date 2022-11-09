@@ -96,10 +96,11 @@ public final class WireSafeEnum<T extends Enum<T>> {
   private static <T extends Enum<T>> WireSafeEnum<T> fromJson(
       @Nonnull Class<T> enumType,
       @Nonnull String jsonValue,
-      BiFunction<Class<T>, String, WireSafeEnum<T>> fallback
+      @Nonnull BiFunction<Class<T>, String, WireSafeEnum<T>> fallback
   ) {
     checkNotNull(enumType, "enumType");
     checkNotNull(jsonValue, "jsonValue");
+    checkNotNull(fallback, "fallback");
 
     enumType = getRealEnumType(enumType);
     ensureJsonCacheInitialized(enumType);
