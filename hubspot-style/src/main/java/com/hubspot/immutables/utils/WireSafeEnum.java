@@ -96,7 +96,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
   private static <T extends Enum<T>> WireSafeEnum<T> fromJson(
       @Nonnull Class<T> enumType,
       @Nonnull String jsonValue,
-      BiFunction<Class<T>, String, WireSafeEnum<T>> creator
+      BiFunction<Class<T>, String, WireSafeEnum<T>> fallback
   ) {
     checkNotNull(enumType, "enumType");
     checkNotNull(jsonValue, "jsonValue");
@@ -105,7 +105,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     ensureJsonCacheInitialized(enumType);
     WireSafeEnum<?> cached = JSON_LOOKUP_CACHE.get(enumType).get(jsonValue);
     if (cached == null) {
-      return creator.apply(enumType, jsonValue);
+      return fallback.apply(enumType, jsonValue);
     } else {
       return (WireSafeEnum<T>) cached;
     }
