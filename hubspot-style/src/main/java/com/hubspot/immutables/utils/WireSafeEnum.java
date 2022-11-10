@@ -1,19 +1,5 @@
 package com.hubspot.immutables.utils;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-
-import javax.annotation.Nonnull;
-
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -28,6 +14,19 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import javax.annotation.Nonnull;
 
 /**
  * This utility is meant to help with the fragility introduced by
@@ -46,8 +45,7 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
  * there are some things to be aware of:
  * 1. every enum constant must serialize to JSON as a non-null string
  *    (serializing as a number or null is not supported)
- * 2. enums with custom @JsonCreator logic are poorly/not supported
- * 3. T and WireSafeEnum<T> are different types so migrating is a
+ * 2. T and WireSafeEnum<T> are different types so migrating is a
  *    breaking change from a code perspective and Java code usages
  *    of the field will need to get updated
  */
@@ -86,19 +84,29 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   @Nonnull
-  @SuppressWarnings("unchecked")
   public static <T extends Enum<T>> WireSafeEnum<T> fromJson(
       @Nonnull Class<T> enumType,
       @Nonnull String jsonValue
   ) {
+    return fromJson(enumType, jsonValue, WireSafeEnum::new);
+  }
+
+  @Nonnull
+  @SuppressWarnings("unchecked")
+  private static <T extends Enum<T>> WireSafeEnum<T> fromJson(
+      @Nonnull Class<T> enumType,
+      @Nonnull String jsonValue,
+      @Nonnull BiFunction<Class<T>, String, WireSafeEnum<T>> fallback
+  ) {
     checkNotNull(enumType, "enumType");
     checkNotNull(jsonValue, "jsonValue");
+    checkNotNull(fallback, "fallback");
 
     enumType = getRealEnumType(enumType);
     ensureJsonCacheInitialized(enumType);
     WireSafeEnum<?> cached = JSON_LOOKUP_CACHE.get(enumType).get(jsonValue);
     if (cached == null) {
-      return new WireSafeEnum<>(enumType, jsonValue);
+      return fallback.apply(enumType, jsonValue);
     } else {
       return (WireSafeEnum<T>) cached;
     }
@@ -274,7 +282,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   public static class Deserializer extends JsonDeserializer<WireSafeEnum<?>> implements ContextualDeserializer {
-    private static final Map<Class<?>, JsonDeserializer<WireSafeEnum<?>>> DESERIALIZER_CACHE =
+    private static final Map<JavaType, JsonDeserializer<WireSafeEnum<?>>> DESERIALIZER_CACHE =
         new ConcurrentHashMap<>();
 
     @Override
@@ -295,20 +303,16 @@ public final class WireSafeEnum<T extends Enum<T>> {
         } else if (!typeParameters[0].isEnumType()) {
           throw ctxt.mappingException("Can not handle non-enum type: " + typeParameters[0].getRawClass());
         } else {
-          return deserializerFor(typeParameters[0].getRawClass());
+          return deserializerFor(typeParameters[0]);
         }
       }
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T extends Enum<T>> JsonDeserializer<?> deserializerFor(Class<?> rawType) {
-      return DESERIALIZER_CACHE.computeIfAbsent(rawType, ignored -> {
-        Class<T> enumType = (Class<T>) rawType;
-        return newDeserializer(enumType);
-      });
+    private static JsonDeserializer<?> deserializerFor(JavaType javaType) {
+      return DESERIALIZER_CACHE.computeIfAbsent(javaType, Deserializer::newDeserializer);
     }
 
-    private static <T extends Enum<T>> JsonDeserializer<WireSafeEnum<?>> newDeserializer(Class<T> enumType) {
+    private static <T extends Enum<T>> JsonDeserializer<WireSafeEnum<?>> newDeserializer(JavaType enumType) {
       return new JsonDeserializer<WireSafeEnum<?>>() {
 
         @Override
@@ -316,9 +320,31 @@ public final class WireSafeEnum<T extends Enum<T>> {
           if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
             return null;
           } else if (p.getCurrentToken() == JsonToken.VALUE_STRING) {
-            return WireSafeEnum.fromJson(enumType, p.getText());
+            @SuppressWarnings("unchecked")
+            Class<T> rawType = (Class<T>) enumType.getRawClass();
+            return WireSafeEnum.fromJson(rawType, p.getText(), (klass, value) -> create(klass, value, p, ctxt));
           } else {
             throw ctxt.wrongTokenException(p, JsonToken.VALUE_STRING, null);
+          }
+        }
+
+        private WireSafeEnum<T> create(Class<T> rawClass, String jsonValue, JsonParser parser, DeserializationContext ctxt) {
+          return deserializeValue(parser, ctxt)
+              .map(v -> new WireSafeEnum<>(rawClass, jsonValue, v))
+              .orElseGet(() -> new WireSafeEnum<>(rawClass, jsonValue));
+        }
+
+        @SuppressWarnings("unchecked")
+        private Optional<T> deserializeValue(JsonParser p, DeserializationContext ctxt) {
+          try {
+            JsonDeserializer<?> deserializer = ctxt.findNonContextualValueDeserializer(enumType);
+            if (deserializer == null) {
+              return Optional.empty();
+            }
+
+            return Optional.ofNullable(((JsonDeserializer<T>) deserializer).deserialize(p, ctxt));
+          } catch (Exception e) {
+            return Optional.empty();
           }
         }
       };

@@ -3,17 +3,22 @@ package com.hubspot.immutables.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
-
-import java.io.IOException;
-import java.lang.annotation.RetentionPolicy;
-import java.util.Optional;
-
-import org.junit.Test;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.databind.util.Converter;
+import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.Test;
 
 public class WireSafeEnumTest {
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -88,6 +93,101 @@ public class WireSafeEnumTest {
 
     public String getSomething() {
       return "a";
+    }
+  }
+
+  public enum EnumWithMultipleSerializedForms {
+    ABC,
+    DEF,
+    ;
+
+    @JsonCreator
+    public static EnumWithMultipleSerializedForms fromString(String s) {
+      if (s.equalsIgnoreCase(ABC.name())) {
+        return ABC;
+      } else if (s.equalsIgnoreCase(DEF.name())) {
+        return DEF;
+      } else {
+        throw new IllegalArgumentException("Unknown value: " + s);
+      }
+    }
+  }
+
+  public enum EnumWithNullableJsonCreator {
+    ABC,
+    ;
+
+    @JsonCreator
+    public static EnumWithNullableJsonCreator fromString(String s) {
+      return s.equals(ABC.name()) ? ABC : null;
+    }
+  }
+
+  @JsonDeserialize(converter = StringToEnumConverter.class)
+  @JsonSerialize(converter = EnumToStringConverter.class)
+  public enum EnumWithConverter {
+    ABC("1"),
+    DEF("2"),
+    ;
+
+    private static final Map<String, EnumWithConverter> LOOKUP = Maps.uniqueIndex(Arrays.asList(values()), EnumWithConverter::getValue);
+
+    private final String value;
+
+    EnumWithConverter(String value) {
+      this.value = value;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public static Optional<EnumWithConverter> fromString(String s) {
+      return Optional.ofNullable(LOOKUP.get(s));
+    }
+  }
+
+  // Exceptions from converts are not wrapped in JsonMappingExceptions and therefore we need to test
+  // that we also handle these failures
+  public static class StringToEnumConverter implements Converter<String, EnumWithConverter> {
+
+    @Override
+    public EnumWithConverter convert(String value) {
+      return EnumWithConverter
+          .fromString(value)
+          .orElseThrow(() ->
+              new IllegalArgumentException(
+                  "Could not find variant by steroids name with provided value: " + value
+              )
+          );
+    }
+
+    @Override
+    public JavaType getInputType(TypeFactory typeFactory) {
+      return typeFactory.constructType(String.class);
+    }
+
+    @Override
+    public JavaType getOutputType(TypeFactory typeFactory) {
+      return typeFactory.constructType(EnumWithConverter.class);
+    }
+  }
+
+  public static class EnumToStringConverter implements Converter<EnumWithConverter, String> {
+
+    @Override
+    public String convert(EnumWithConverter value) {
+      return value.getValue();
+    }
+
+    @Override
+    public JavaType getInputType(TypeFactory typeFactory) {
+      return typeFactory.constructType(EnumWithConverter.class);
+    }
+
+    @Override
+    public JavaType getOutputType(TypeFactory typeFactory) {
+      return typeFactory.constructType(String.class);
     }
   }
 
@@ -391,5 +491,59 @@ public class WireSafeEnumTest {
 
     assertThat(wrapper.asEnumOrThrow())
         .isEqualTo(RetentionPolicy.SOURCE);
+  }
+
+  @Test
+  public void itDelegatesToJsonCreatorIfNotCached() throws Exception {
+    TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>> type = new TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>>() {};
+
+    WireSafeEnum<EnumWithMultipleSerializedForms> wrapper = MAPPER.readValue("\"ABC\"", type);
+    assertCorrectEnum(wrapper, "ABC", EnumWithMultipleSerializedForms.ABC);
+
+    wrapper = MAPPER.readValue("\"abc\"", type);
+    assertCorrectEnum(wrapper, "abc", EnumWithMultipleSerializedForms.ABC);
+
+    wrapper = MAPPER.readValue("\"def\"", type);
+    assertCorrectEnum(wrapper, "def", EnumWithMultipleSerializedForms.DEF);
+
+    wrapper = MAPPER.readValue("\"xyz\"", type);
+    assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
+    assertThat(wrapper.asString()).isEqualTo("xyz");
+    assertThat(wrapper.asEnum()).isEmpty();
+  }
+
+  @Test
+  public void itHandlesNullFromJsonCreator() throws Exception {
+    TypeReference<WireSafeEnum<EnumWithNullableJsonCreator>> type = new TypeReference<WireSafeEnum<EnumWithNullableJsonCreator>>() {};
+    WireSafeEnum<EnumWithNullableJsonCreator> wrapper = MAPPER.readValue("\"ABC\"", type);
+    assertCorrectEnum(wrapper, "ABC", EnumWithNullableJsonCreator.ABC);
+
+    wrapper = MAPPER.readValue("\"xyz\"", type);
+    assertThat(wrapper.enumType()).isEqualTo(EnumWithNullableJsonCreator.class);
+    assertThat(wrapper.asString()).isEqualTo("xyz");
+    assertThat(wrapper.asEnum()).isEmpty();
+  }
+
+  @Test
+  public void itHandlesEnumsWithConverters() throws Exception {
+    TypeReference<WireSafeEnum<EnumWithConverter>> type = new TypeReference<WireSafeEnum<EnumWithConverter>>() {};
+
+    WireSafeEnum<EnumWithConverter> wrapper = MAPPER.readValue("\"1\"", type);
+    assertCorrectEnum(wrapper, "1", EnumWithConverter.ABC);
+
+    wrapper = MAPPER.readValue("\"2\"", type);
+    assertCorrectEnum(wrapper, "2", EnumWithConverter.DEF);
+
+    wrapper = MAPPER.readValue("\"3\"", type);
+    assertThat(wrapper.enumType()).isEqualTo(EnumWithConverter.class);
+    assertThat(wrapper.asString()).isEqualTo("3");
+    assertThat(wrapper.asEnum()).isEmpty();
+  }
+
+  private <T extends Enum<T>> void assertCorrectEnum(WireSafeEnum<?> wrapper, String stringValue, T enumValue) {
+    assertThat(wrapper.enumType()).isEqualTo(enumValue.getClass());
+    assertThat(wrapper.asString()).isEqualTo(stringValue);
+    assertThat(wrapper.asEnum().isPresent()).isTrue();
+    assertThat(wrapper.asEnum().get()).isEqualTo(enumValue);
   }
 }
