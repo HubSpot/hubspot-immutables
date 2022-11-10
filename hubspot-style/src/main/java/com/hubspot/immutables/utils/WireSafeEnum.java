@@ -343,7 +343,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
             }
 
             return Optional.ofNullable(((JsonDeserializer<T>) deserializer).deserialize(p, ctxt));
-          } catch (IOException e) {
+          } catch (Exception e) {
             return Optional.empty();
           }
         }
