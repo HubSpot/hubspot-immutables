@@ -105,6 +105,16 @@ public class WireSafeEnumTest {
     }
   }
 
+  public enum EnumWithBadJsonCreator {
+    ABC,
+    ;
+
+    @JsonCreator
+    public static EnumWithBadJsonCreator fromString(String s) {
+      return s.equals(ABC.name()) ? ABC : null;
+    }
+  }
+
   @Test
   public void itHandlesEnumsWithOverrides() {
     WireSafeEnum<EnumWithOverride> abc = WireSafeEnum.of(EnumWithOverride.ABC);
@@ -422,6 +432,18 @@ public class WireSafeEnumTest {
 
     wrapper = MAPPER.readValue("\"xyz\"", type);
     assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
+    assertThat(wrapper.asString()).isEqualTo("xyz");
+    assertThat(wrapper.asEnum()).isEmpty();
+  }
+
+  @Test
+  public void itHandlesNullFromJsonCreator() throws Exception {
+    TypeReference<WireSafeEnum<EnumWithBadJsonCreator>> type = new TypeReference<WireSafeEnum<EnumWithBadJsonCreator>>() {};
+    WireSafeEnum<EnumWithBadJsonCreator> wrapper = MAPPER.readValue("\"ABC\"", type);
+    assertCorrectEnum(wrapper, "ABC", EnumWithBadJsonCreator.ABC);
+
+    wrapper = MAPPER.readValue("\"xyz\"", type);
+    assertThat(wrapper.enumType()).isEqualTo(EnumWithBadJsonCreator.class);
     assertThat(wrapper.asString()).isEqualTo("xyz");
     assertThat(wrapper.asEnum()).isEmpty();
   }
