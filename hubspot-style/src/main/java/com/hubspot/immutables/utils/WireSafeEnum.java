@@ -338,7 +338,11 @@ public final class WireSafeEnum<T extends Enum<T>> {
         private Optional<T> deserializeValue(JsonParser p, DeserializationContext ctxt) {
           try {
             JsonDeserializer<?> deserializer = ctxt.findNonContextualValueDeserializer(enumType);
-            return Optional.of(((JsonDeserializer<T>) deserializer).deserialize(p, ctxt));
+            if (deserializer == null) {
+              return Optional.empty();
+            }
+
+            return Optional.ofNullable(((JsonDeserializer<T>) deserializer).deserialize(p, ctxt));
           } catch (IOException e) {
             return Optional.empty();
           }
