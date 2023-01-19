@@ -24,7 +24,8 @@ import com.hubspot.immutables.validation.InvalidImmutableStateException;
     throwForInvalidImmutableState = InvalidImmutableStateException.class,
     optionalAcceptNullable = true, // allow for an Optional<T> to have a setter that takes a null value of T
     forceJacksonPropertyNames = false, // otherwise we can't use RosettaNamingStrategies
-    visibility = ImplementationVisibility.SAME // Generated class will have the same visibility as the abstract class/interface)
+    visibility = ImplementationVisibility.SAME, // Generated class will have the same visibility as the abstract class/interface)
+    passAnnotations = ImmutableInherited.class
 )
 @ImmutableSetEncodingEnabled
 @ImmutableListEncodingEnabled
