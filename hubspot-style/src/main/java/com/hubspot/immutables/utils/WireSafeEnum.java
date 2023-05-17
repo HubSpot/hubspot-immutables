@@ -128,13 +128,28 @@ public final class WireSafeEnum<T extends Enum<T>> {
     return enumValue;
   }
 
+  /**
+   * @deprecated this method doesn't handle unknown enum values, and eliminates the
+   * benefits of WireSafeEnum. If you want to compare to a specific value, you can
+   * call {@link #contains(Enum)}, which handles unknown values gracefully. If you do
+   * really need to coerce to an enum, you can replace this method with
+   * .asEnum().orElseThrow(exceptionSupplier)
+   */
   @Nonnull
+  @Deprecated
   public <X extends Throwable> T asEnumOrThrow(Supplier<? extends X> exceptionSupplier) throws X {
     return asEnum()
         .orElseThrow(exceptionSupplier);
   }
 
+  /**
+   * @deprecated this method doesn't handle unknown enum values, and eliminates the
+   * benefits of WireSafeEnum. If you want to compare to a specific value, you can
+   * call {@link #contains(Enum)}, which handles unknown values gracefully. If you do
+   * really need to coerce to an enum, you can replace this method with .asEnum().get()
+   */
   @Nonnull
+  @Deprecated
   public T asEnumOrThrow() {
     return asEnumOrThrow(this::getInvalidValueException);
   }
