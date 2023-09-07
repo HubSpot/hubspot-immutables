@@ -33,6 +33,8 @@ from any dependencies that pull it in, otherwise you'll need to explicitly add i
 Start writing POJOs as abstract classes:
 
 ```java
+import org.immutables.value.Value.Immutable;
+
 @Immutable
 @HubSpotStyle
 public abstract class AbstractWidget {
