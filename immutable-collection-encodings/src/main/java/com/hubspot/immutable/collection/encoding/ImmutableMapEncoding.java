@@ -105,6 +105,11 @@ public class ImmutableMapEncoding<K, V> {
       builder = null;
     }
 
+    @Encoding.IsInit
+    boolean isSet() {
+      return map != null || builder != null;
+    }
+
     @Encoding.Build
     ImmutableMap<K, V> build() {
       if (builder != null) {
