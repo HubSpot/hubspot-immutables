@@ -29,6 +29,11 @@
     <dependencies>
       <dependency>
         <groupId>com.hubspot.immutables</groupId>
+        <artifactId>hubspot-style</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.hubspot.immutables</groupId>
         <artifactId>immutables-exceptions</artifactId>
         <version>${project.version}</version>
       </dependency>
