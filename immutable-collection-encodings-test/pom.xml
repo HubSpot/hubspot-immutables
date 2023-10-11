@@ -20,7 +20,15 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
 
+    <dependency>
+      <groupId>com.hubspot.immutables</groupId>
+      <artifactId>hubspot-style</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutable-collection-encodings</artifactId>
@@ -29,6 +37,11 @@
     <dependency>
       <groupId>org.immutables</groupId>
       <artifactId>value</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.hubspot.immutables</groupId>
+      <artifactId>immutables-exceptions</artifactId>
       <scope>provided</scope>
     </dependency>
 
