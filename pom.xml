@@ -10,7 +10,7 @@
 
   <groupId>com.hubspot.immutables</groupId>
   <artifactId>hubspot-immutables</artifactId>
-  <version>1.4</version>
+  <version>1.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -58,8 +58,4 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <scm>
-    <tag>hubspot-immutables-1.4</tag>
-  </scm>
 </project>
