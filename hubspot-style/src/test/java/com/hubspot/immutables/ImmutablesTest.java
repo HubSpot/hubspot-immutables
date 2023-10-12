@@ -164,8 +164,10 @@ public class ImmutablesTest {
         .isInstanceOf(JsonMappingException.class);
     ModifiableImmutableWithModifiable modifiable = objectMapper.readValue(inputJson, ModifiableImmutableWithModifiable.class);
     assertThatThrownBy(modifiable::toImmutable)
-        .hasMessage("ImmutableWithModifiable in not initialized, some of the required attributes are not set [id]")
-        .isInstanceOf(IllegalStateException.class);
+      .hasMessage(
+        "ImmutableWithModifiable is not initialized, some of the required attributes are not set [id]"
+      )
+      .isInstanceOf(IllegalStateException.class);
     ImmutableWithModifiable exampleImmutable = modifiable.setId(1).toImmutable();
     assertThat(exampleImmutable.getId()).isEqualTo(1);
     assertThat(exampleImmutable.getDescription()).isEqualTo("Foo");

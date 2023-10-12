@@ -108,6 +108,11 @@ public class ImmutableSetEncoding<T> {
       builder = null;
     }
 
+    @Encoding.IsInit
+    boolean isSet() {
+      return set != null || builder != null;
+    }
+
     @Encoding.Build
     ImmutableSet<T> build() {
       if (builder != null) {

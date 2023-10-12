@@ -31,6 +31,11 @@
       <artifactId>value</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.hubspot.immutables</groupId>
+      <artifactId>immutables-exceptions</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
