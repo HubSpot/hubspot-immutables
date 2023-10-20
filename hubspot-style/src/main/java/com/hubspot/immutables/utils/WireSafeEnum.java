@@ -308,19 +308,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
     @Override
     public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property) throws JsonMappingException {
-      JavaType contextualType = ctxt.getContextualType();
-      if (contextualType == null || !contextualType.hasRawClass(WireSafeEnum.class)) {
-        throw ctxt.mappingException("Can not handle contextualType: " + contextualType);
-      } else {
-        JavaType[] typeParameters = contextualType.findTypeParameters(WireSafeEnum.class);
-        if (typeParameters.length != 1) {
-          throw ctxt.mappingException("Can not discover enum type for: " + contextualType);
-        } else if (!typeParameters[0].isEnumType()) {
-          throw ctxt.mappingException("Can not handle non-enum type: " + typeParameters[0].getRawClass());
-        } else {
-          return deserializerFor(typeParameters[0]);
-        }
-      }
+      return deserializerFor(findWireSafeEnumType(ctxt.getContextualType(), ctxt));
     }
 
     private static JsonDeserializer<?> deserializerFor(JavaType javaType) {
@@ -337,32 +325,52 @@ public final class WireSafeEnum<T extends Enum<T>> {
           } else if (p.getCurrentToken() == JsonToken.VALUE_STRING) {
             @SuppressWarnings("unchecked")
             Class<T> rawType = (Class<T>) enumType.getRawClass();
-            return WireSafeEnum.fromJson(rawType, p.getText(), (klass, value) -> create(klass, value, p, ctxt));
+            return WireSafeEnum.fromJson(rawType, p.getText(), (klass, value) -> create(enumType, value, p, ctxt));
           } else {
             throw ctxt.wrongTokenException(p, JsonToken.VALUE_STRING, null);
           }
         }
-
-        private WireSafeEnum<T> create(Class<T> rawClass, String jsonValue, JsonParser parser, DeserializationContext ctxt) {
-          return deserializeValue(parser, ctxt)
-              .map(v -> new WireSafeEnum<>(rawClass, jsonValue, v))
-              .orElseGet(() -> new WireSafeEnum<>(rawClass, jsonValue));
-        }
-
-        @SuppressWarnings("unchecked")
-        private Optional<T> deserializeValue(JsonParser p, DeserializationContext ctxt) {
-          try {
-            JsonDeserializer<?> deserializer = ctxt.findNonContextualValueDeserializer(enumType);
-            if (deserializer == null) {
-              return Optional.empty();
-            }
-
-            return Optional.ofNullable(((JsonDeserializer<T>) deserializer).deserialize(p, ctxt));
-          } catch (Exception e) {
-            return Optional.empty();
-          }
-        }
       };
+    }
+  }
+
+  private static JavaType findWireSafeEnumType(JavaType contextualType, DeserializationContext ctxt) throws JsonMappingException {
+    if (contextualType == null || !contextualType.hasRawClass(WireSafeEnum.class)) {
+      throw ctxt.mappingException("Can not handle contextualType: " + contextualType);
+    } else {
+      JavaType[] typeParameters = contextualType.findTypeParameters(WireSafeEnum.class);
+      if (typeParameters.length != 1) {
+        throw ctxt.mappingException("Can not discover enum type for: " + contextualType);
+      } else if (!typeParameters[0].isEnumType()) {
+        throw ctxt.mappingException("Can not handle non-enum type: " + typeParameters[0].getRawClass());
+      } else {
+        return typeParameters[0];
+      }
+    }
+  }
+
+  private static <T extends Enum<T>> WireSafeEnum<T> create(JavaType enumType, String jsonValue, JsonParser parser, DeserializationContext ctxt) {
+    @SuppressWarnings("unchecked")
+    Class<T> rawClass = (Class<T>) enumType.getRawClass();
+
+    Optional<T> maybeEnumValue = deserializeValue(enumType, parser, ctxt);
+
+    return maybeEnumValue
+        .map(enumValue -> new WireSafeEnum<>(rawClass, jsonValue, enumValue))
+        .orElseGet(() -> new WireSafeEnum<>(rawClass, jsonValue));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T extends Enum<T>> Optional<T> deserializeValue(JavaType enumType, JsonParser p, DeserializationContext ctxt) {
+    try {
+      JsonDeserializer<?> deserializer = ctxt.findNonContextualValueDeserializer(enumType);
+      if (deserializer == null) {
+        return Optional.empty();
+      }
+
+      return Optional.ofNullable((T) deserializer.deserialize(p, ctxt));
+    } catch (Exception e) {
+      return Optional.empty();
     }
   }
 }
