@@ -13,10 +13,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.Converter;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -530,12 +534,38 @@ public class WireSafeEnumTest {
     });
   }
 
+  @Test
+  public void itRoundsTripsAMap() throws Exception {
+    Map<WireSafeEnum<RetentionPolicy>, Integer> original = new HashMap<>();
+    original.put(WireSafeEnum.of(RetentionPolicy.SOURCE), 123);
+    original.put(WireSafeEnum.fromJson(RetentionPolicy.class, "INVALID"), 456);
+
+    Map<WireSafeEnum<RetentionPolicy>, Integer> parsed = MAPPER.readValue(
+        MAPPER.writeValueAsString(original),
+        new TypeReference<Map<WireSafeEnum<RetentionPolicy>, Integer>>() {}
+    );
+
+    assertThat(parsed).isEqualTo(original);
+  }
+
   private Stream<String> writeToJson(WireSafeEnum<?> wireSafeEnum) throws IOException {
-    return Stream.of(MAPPER.writeValueAsString(wireSafeEnum));
+    Map<WireSafeEnum<?>, Integer> map = Collections.singletonMap(wireSafeEnum, 123);
+    String mapKey = Iterators.getOnlyElement(MAPPER.valueToTree(map).fieldNames());
+
+    return Stream.of(MAPPER.writeValueAsString(wireSafeEnum), MAPPER.writeValueAsString(mapKey));
   }
 
   private <T extends Enum<T>> Stream<WireSafeEnum<T>> readFromJson(String json, TypeReference<WireSafeEnum<T>> typeReference) throws IOException {
-    return Stream.of(MAPPER.readValue(json, typeReference));
+    Map<WireSafeEnum<T>, Integer> map = MAPPER.readValue("{" + json + ": 123}", MAPPER.getTypeFactory().constructMapType(
+        HashMap.class,
+        MAPPER.constructType(typeReference.getType()),
+        MAPPER.constructType(Integer.class))
+    );
+
+    return Stream.of(
+        MAPPER.readValue(json, typeReference),
+        Iterables.getOnlyElement(map.keySet())
+    );
   }
 
   private <T extends Enum<T>> void assertCorrectEnum(WireSafeEnum<?> wrapper, String stringValue, T enumValue) {

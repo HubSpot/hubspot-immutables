@@ -12,8 +12,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
+import com.fasterxml.jackson.databind.deser.ContextualKeyDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
+import com.hubspot.immutables.utils.WireSafeEnum.KeyDeserializer;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,7 +51,7 @@ import javax.annotation.Nonnull;
  *    breaking change from a code perspective and Java code usages
  *    of the field will need to get updated
  */
-@JsonDeserialize(using = Deserializer.class)
+@JsonDeserialize(using = Deserializer.class, keyUsing = KeyDeserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE =
@@ -328,6 +330,41 @@ public final class WireSafeEnum<T extends Enum<T>> {
             return WireSafeEnum.fromJson(rawType, p.getText(), (klass, value) -> create(enumType, value, p, ctxt));
           } else {
             throw ctxt.wrongTokenException(p, JsonToken.VALUE_STRING, null);
+          }
+        }
+      };
+    }
+  }
+
+  public static class KeyDeserializer extends com.fasterxml.jackson.databind.KeyDeserializer implements ContextualKeyDeserializer {
+    private static final Map<JavaType, com.fasterxml.jackson.databind.KeyDeserializer> KEY_DESERIALIZER_CACHE =
+        new ConcurrentHashMap<>();
+
+    @Override
+    public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException {
+      throw ctxt.mappingException("Expected createContextual to be called");
+    }
+
+    @Override
+    public com.fasterxml.jackson.databind.KeyDeserializer createContextual(DeserializationContext ctxt, BeanProperty property) throws JsonMappingException {
+      return keyDeserializerFor(findWireSafeEnumType(ctxt.getContextualType().getKeyType(), ctxt));
+    }
+
+    private static com.fasterxml.jackson.databind.KeyDeserializer keyDeserializerFor(JavaType javaType) {
+      return KEY_DESERIALIZER_CACHE.computeIfAbsent(javaType, KeyDeserializer::newKeyDeserializer);
+    }
+
+    private static <T extends Enum<T>> com.fasterxml.jackson.databind.KeyDeserializer newKeyDeserializer(JavaType enumType) {
+      return new com.fasterxml.jackson.databind.KeyDeserializer() {
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException {
+          if (key == null) {
+            return null;
+          } else {
+            Class<T> rawType = (Class<T>) enumType.getRawClass();
+            return WireSafeEnum.fromJson(rawType, key, (klass, value) -> create(enumType, value, ctxt.getParser(), ctxt));
           }
         }
       };

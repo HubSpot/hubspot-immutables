@@ -22,6 +22,8 @@
 
   <properties>
     <project.build.targetJdk>1.8</project.build.targetJdk>
+    <dep.jackson.version>2.12.6</dep.jackson.version>
+    <dep.jackson-databind.version>${dep.jackson.version}</dep.jackson-databind.version>
     <dep.immutables.version>2.8.8</dep.immutables.version>
   </properties>
 
