@@ -134,7 +134,7 @@ public interface WidgetIF {
 
   @Value.Check
   default void widgetIdInFoo() {
-    ImmutableConditions.checkValid(getFoo().contains(getWidgetId()), "widgetId %d must be in Foo!", getWidgetId());
+    ImmutableConditions.checkValid(getFoo().contains(getWidgetId()), "widgetId %s must be in Foo!", getWidgetId());
   }
 }
 ```

@@ -5,11 +5,13 @@ import java.util.Optional;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.base.Strings;
+
 public class ImmutableConditions {
 
   public static void checkValid(boolean expression, String template, Object... arguments) {
     if (!expression) {
-      throw new InvalidImmutableStateException(String.format(template, arguments));
+      throw new InvalidImmutableStateException(Strings.lenientFormat(template, arguments));
     }
   }
 
