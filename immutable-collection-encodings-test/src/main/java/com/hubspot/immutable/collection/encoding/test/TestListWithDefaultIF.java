@@ -1,7 +1,6 @@
 package com.hubspot.immutable.collection.encoding.test;
 
 import com.google.common.collect.ImmutableList;
-
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 

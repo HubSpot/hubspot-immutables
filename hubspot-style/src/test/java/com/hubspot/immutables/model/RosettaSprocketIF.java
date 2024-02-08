@@ -1,12 +1,11 @@
 package com.hubspot.immutables.model;
 
-import org.immutables.value.Value;
-
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.hubspot.immutables.style.HubSpotStyle;
 import com.hubspot.rosetta.annotations.RosettaNaming;
 import com.hubspot.rosetta.annotations.RosettaProperty;
+import org.immutables.value.Value;
 
 @HubSpotStyle
 @Value.Immutable
@@ -14,8 +13,10 @@ import com.hubspot.rosetta.annotations.RosettaProperty;
 @JsonDeserialize(as = RosettaSprocket.class)
 public interface RosettaSprocketIF {
   int getId();
+
   @RosettaProperty("hubspot_id")
   int getHubSpotId();
+
   String getName();
   String getSomethingWithLongName();
   boolean isBlueSprocket();

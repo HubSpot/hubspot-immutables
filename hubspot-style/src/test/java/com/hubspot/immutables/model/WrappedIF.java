@@ -1,8 +1,7 @@
 package com.hubspot.immutables.model;
 
-import org.immutables.value.Value;
-
 import com.hubspot.immutables.style.HubSpotStyle;
+import org.immutables.value.Value;
 
 @HubSpotStyle
 @Value.Immutable

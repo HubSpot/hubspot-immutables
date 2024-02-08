@@ -1,14 +1,12 @@
 package com.hubspot.immutable.collection.encoding;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.List;
-
 import org.immutables.encode.Encoding;
 import org.immutables.encode.Encoding.Naming;
 import org.immutables.encode.Encoding.StandardNaming;
-
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 
 @Encoding
 public class ImmutableListEncoding<T> {
@@ -56,7 +54,9 @@ public class ImmutableListEncoding<T> {
       if (builder != null) {
         builder.add(element);
       } else if (list != null) {
-        builder = ImmutableList.<T>builderWithExpectedSize(list.size() + 1)
+        builder =
+          ImmutableList
+            .<T>builderWithExpectedSize(list.size() + 1)
             .addAll(list)
             .add(element);
 
@@ -78,7 +78,9 @@ public class ImmutableListEncoding<T> {
           additionalSize = ((Collection<? extends T>) elements).size();
         }
 
-        builder = ImmutableList.<T>builderWithExpectedSize(list.size() + additionalSize)
+        builder =
+          ImmutableList
+            .<T>builderWithExpectedSize(list.size() + additionalSize)
             .addAll(list)
             .addAll(elements);
 
@@ -87,7 +89,10 @@ public class ImmutableListEncoding<T> {
         if (elements instanceof ImmutableCollection) {
           set(elements);
         } else if (elements instanceof Collection) {
-          builder = ImmutableList.builderWithExpectedSize(((Collection<? extends T>) elements).size());
+          builder =
+            ImmutableList.builderWithExpectedSize(
+              ((Collection<? extends T>) elements).size()
+            );
           builder.addAll(elements);
         } else {
           builder = ImmutableList.builder();
