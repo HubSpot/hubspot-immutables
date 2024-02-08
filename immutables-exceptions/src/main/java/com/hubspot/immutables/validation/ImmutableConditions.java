@@ -1,21 +1,29 @@
 package com.hubspot.immutables.validation;
 
+import com.google.common.base.Strings;
 import java.util.Collection;
 import java.util.Optional;
-
 import javax.annotation.Nonnull;
-
-import com.google.common.base.Strings;
 
 public class ImmutableConditions {
 
-  public static void checkValid(boolean expression, String template, Object... arguments) {
+  public static void checkValid(
+    boolean expression,
+    String template,
+    Object... arguments
+  ) {
     if (!expression) {
-      throw new InvalidImmutableStateException(Strings.lenientFormat(template, arguments));
+      throw new InvalidImmutableStateException(
+        Strings.lenientFormat(template, arguments)
+      );
     }
   }
 
-  public static void checkNotEmpty(Collection<?> collection, String template, Object... arguments) {
+  public static void checkNotEmpty(
+    Collection<?> collection,
+    String template,
+    Object... arguments
+  ) {
     checkValid(!collection.isEmpty(), template, arguments);
   }
 
@@ -29,7 +37,11 @@ public class ImmutableConditions {
     return ref;
   }
 
-  public static <T> T checkPresent(Optional<T> maybe, String template, Object... arguments) {
+  public static <T> T checkPresent(
+    Optional<T> maybe,
+    String template,
+    Object... arguments
+  ) {
     checkValid(maybe.isPresent(), template, arguments);
     return maybe.get();
   }
