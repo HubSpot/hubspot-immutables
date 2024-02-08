@@ -14,18 +14,19 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualKeyDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 import com.hubspot.immutables.utils.WireSafeEnum.KeyDeserializer;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
@@ -55,10 +56,10 @@ import javax.annotation.Nonnull;
 public final class WireSafeEnum<T extends Enum<T>> {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE =
-    new ConcurrentHashMap<>();
-  private static final Map<Class<?>, Map<String, WireSafeEnum<?>>> JSON_LOOKUP_CACHE =
-    new ConcurrentHashMap<>();
+  private static final AtomicReference<ImmutableMap<Class<?>, Map<?, WireSafeEnum<?>>>> ENUM_LOOKUP_CACHE =
+    new AtomicReference<>(ImmutableMap.of());
+  private static final AtomicReference<ImmutableMap<Class<?>, Map<String, WireSafeEnum<?>>>> JSON_LOOKUP_CACHE =
+    new AtomicReference<>(ImmutableMap.of());
 
   private final Class<T> enumType;
   private final String jsonValue;
@@ -82,8 +83,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     checkNotNull(value, "value");
 
     Class<T> enumType = getRealEnumType((Class<T>) value.getClass());
-    ensureEnumCacheInitialized(enumType);
-    return (WireSafeEnum<T>) ENUM_LOOKUP_CACHE.get(enumType).get(value);
+    return enumCacheFor(enumType).get(value);
   }
 
   @Nonnull
@@ -95,7 +95,6 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   @Nonnull
-  @SuppressWarnings("unchecked")
   private static <T extends Enum<T>> WireSafeEnum<T> fromJson(
     @Nonnull Class<T> enumType,
     @Nonnull String jsonValue,
@@ -106,12 +105,11 @@ public final class WireSafeEnum<T extends Enum<T>> {
     checkNotNull(fallback, "fallback");
 
     enumType = getRealEnumType(enumType);
-    ensureJsonCacheInitialized(enumType);
-    WireSafeEnum<?> cached = JSON_LOOKUP_CACHE.get(enumType).get(jsonValue);
+    WireSafeEnum<T> cached = jsonCacheFor(enumType).get(jsonValue);
     if (cached == null) {
       return fallback.apply(enumType, jsonValue);
     } else {
-      return (WireSafeEnum<T>) cached;
+      return cached;
     }
   }
 
@@ -158,9 +156,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   private IllegalStateException getInvalidValueException() {
-    Collection<WireSafeEnum<?>> wiresafeEnumTypes = JSON_LOOKUP_CACHE
-      .get(enumType)
-      .values();
+    Collection<WireSafeEnum<T>> wiresafeEnumTypes = jsonCacheFor(enumType).values();
     String validMembers = Arrays.toString(
       wiresafeEnumTypes.stream().map(WireSafeEnum::asString).distinct().sorted().toArray()
     );
@@ -215,18 +211,39 @@ public final class WireSafeEnum<T extends Enum<T>> {
     return Objects.requireNonNull(o, name + " must not be null");
   }
 
-  private static <T extends Enum<T>> void ensureEnumCacheInitialized(Class<T> enumType) {
-    if (!ENUM_LOOKUP_CACHE.containsKey(enumType)) {
+  @SuppressWarnings("unchecked")
+  private static <T extends Enum<T>> Map<T, WireSafeEnum<T>> enumCacheFor(
+    Class<T> enumType
+  ) {
+    Map<T, WireSafeEnum<T>> enumCache =
+      (Map<T, WireSafeEnum<T>>) (Map<?, ?>) ENUM_LOOKUP_CACHE.get().get(enumType);
+
+    if (enumCache == null) {
       initializeCache(enumType);
+      return (Map<T, WireSafeEnum<T>>) (Map<?, ?>) ENUM_LOOKUP_CACHE.get().get(enumType);
+    } else {
+      return enumCache;
     }
   }
 
-  private static <T extends Enum<T>> void ensureJsonCacheInitialized(Class<T> enumType) {
-    if (!JSON_LOOKUP_CACHE.containsKey(enumType)) {
+  @SuppressWarnings("unchecked")
+  private static <T extends Enum<T>> Map<String, WireSafeEnum<T>> jsonCacheFor(
+    Class<T> enumType
+  ) {
+    Map<String, WireSafeEnum<T>> jsonCache =
+      (Map<String, WireSafeEnum<T>>) (Map<?, ?>) JSON_LOOKUP_CACHE.get().get(enumType);
+
+    if (jsonCache == null) {
       initializeCache(enumType);
+      return (Map<String, WireSafeEnum<T>>) (Map<?, ?>) JSON_LOOKUP_CACHE
+        .get()
+        .get(enumType);
+    } else {
+      return jsonCache;
     }
   }
 
+  @SuppressWarnings("unchecked")
   private static <T extends Enum<T>> void initializeCache(Class<T> enumType) {
     T[] enumConstants = enumType.getEnumConstants();
     ArrayNode stringArray = MAPPER.valueToTree(enumConstants);
@@ -244,9 +261,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     );
 
     Map<T, WireSafeEnum<?>> enumMap = new EnumMap<>(enumType);
-    Map<String, WireSafeEnum<?>> jsonMap = new HashMap<>(
-      mapCapacity(enumConstants.length)
-    );
+    ImmutableMap.Builder<String, WireSafeEnum<?>> jsonMap = ImmutableMap.builder();
 
     for (int i = 0; i < enumConstants.length; i++) {
       T enumValue = enumConstants[i];
@@ -278,8 +293,37 @@ public final class WireSafeEnum<T extends Enum<T>> {
       }
     }
 
-    ENUM_LOOKUP_CACHE.put(enumType, enumMap);
-    JSON_LOOKUP_CACHE.put(enumType, jsonMap);
+    updateCache(ENUM_LOOKUP_CACHE, enumType, enumMap);
+    // <3 generics
+    updateCache(
+      (AtomicReference<ImmutableMap<Class<?>, Map<?, WireSafeEnum<?>>>>) (AtomicReference<?>) JSON_LOOKUP_CACHE,
+      enumType,
+      jsonMap.build()
+    );
+  }
+
+  private static void updateCache(
+    AtomicReference<ImmutableMap<Class<?>, Map<?, WireSafeEnum<?>>>> cache,
+    Class<?> key,
+    Map<?, WireSafeEnum<?>> value
+  ) {
+    while (true) {
+      ImmutableMap<Class<?>, Map<?, WireSafeEnum<?>>> previous = cache.get();
+
+      if (previous.containsKey(key)) {
+        return;
+      } else {
+        ImmutableMap<Class<?>, Map<?, WireSafeEnum<?>>> updated = ImmutableMap
+          .<Class<?>, Map<?, WireSafeEnum<?>>>builder()
+          .putAll(previous)
+          .put(key, value)
+          .build();
+
+        if (cache.compareAndSet(previous, updated)) {
+          return;
+        }
+      }
+    }
   }
 
   private static <T extends Enum<T>> Class<T> getRealEnumType(Class<T> enumType) {
