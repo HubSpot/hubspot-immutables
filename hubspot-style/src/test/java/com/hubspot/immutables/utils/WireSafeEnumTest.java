@@ -30,7 +30,8 @@ public class WireSafeEnumTest {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   public enum CustomJsonEnum {
-    ABC, DEF;
+    ABC,
+    DEF;
 
     @JsonValue
     public String reversedName() {
@@ -39,7 +40,8 @@ public class WireSafeEnumTest {
   }
 
   public enum NullJsonEnum {
-    ABC, DEF;
+    ABC,
+    DEF;
 
     @JsonValue
     public String jsonName() {
@@ -52,7 +54,8 @@ public class WireSafeEnumTest {
   }
 
   public enum NumericJsonEnum {
-    ABC, DEF;
+    ABC,
+    DEF;
 
     @JsonValue
     public int jsonValue() {
@@ -61,7 +64,8 @@ public class WireSafeEnumTest {
   }
 
   public enum CollidingJsonEnum {
-    ABC, DEF;
+    ABC,
+    DEF;
 
     @JsonValue
     public String jsonName() {
@@ -70,7 +74,8 @@ public class WireSafeEnumTest {
   }
 
   public enum CollidingJsonEnumWithCreator {
-    ABC, DEF;
+    ABC,
+    DEF;
 
     @JsonValue
     public String jsonName() {
@@ -90,12 +95,12 @@ public class WireSafeEnumTest {
   public enum EnumWithOverride {
     ABC,
     DEF {
+
       @Override
       public String getSomething() {
         return "b";
       }
-    }
-    ;
+    };
 
     public String getSomething() {
       return "a";
@@ -104,8 +109,7 @@ public class WireSafeEnumTest {
 
   public enum EnumWithMultipleSerializedForms {
     ABC,
-    DEF,
-    ;
+    DEF;
 
     @JsonCreator
     public static EnumWithMultipleSerializedForms fromString(String s) {
@@ -120,8 +124,7 @@ public class WireSafeEnumTest {
   }
 
   public enum EnumWithNullableJsonCreator {
-    ABC,
-    ;
+    ABC;
 
     @JsonCreator
     public static EnumWithNullableJsonCreator fromString(String s) {
@@ -133,10 +136,12 @@ public class WireSafeEnumTest {
   @JsonSerialize(converter = EnumToStringConverter.class)
   public enum EnumWithConverter {
     ABC("1"),
-    DEF("2"),
-    ;
+    DEF("2");
 
-    private static final Map<String, EnumWithConverter> LOOKUP = Maps.uniqueIndex(Arrays.asList(values()), EnumWithConverter::getValue);
+    private static final Map<String, EnumWithConverter> LOOKUP = Maps.uniqueIndex(
+      Arrays.asList(values()),
+      EnumWithConverter::getValue
+    );
 
     private final String value;
 
@@ -155,17 +160,19 @@ public class WireSafeEnumTest {
 
   // Exceptions from converts are not wrapped in JsonMappingExceptions and therefore we need to test
   // that we also handle these failures
-  public static class StringToEnumConverter implements Converter<String, EnumWithConverter> {
+  public static class StringToEnumConverter
+    implements Converter<String, EnumWithConverter> {
 
     @Override
     public EnumWithConverter convert(String value) {
       return EnumWithConverter
-          .fromString(value)
-          .orElseThrow(() ->
-              new IllegalArgumentException(
-                  "Could not find variant by steroids name with provided value: " + value
-              )
-          );
+        .fromString(value)
+        .orElseThrow(
+          () ->
+            new IllegalArgumentException(
+              "Could not find variant by steroids name with provided value: " + value
+            )
+        );
     }
 
     @Override
@@ -179,7 +186,8 @@ public class WireSafeEnumTest {
     }
   }
 
-  public static class EnumToStringConverter implements Converter<EnumWithConverter, String> {
+  public static class EnumToStringConverter
+    implements Converter<EnumWithConverter, String> {
 
     @Override
     public String convert(EnumWithConverter value) {
@@ -209,8 +217,8 @@ public class WireSafeEnumTest {
   @Test
   public void itParsesNullAsNull() throws IOException {
     WireSafeEnum<RetentionPolicy> wrapper = MAPPER.readValue(
-        "null",
-        new TypeReference<WireSafeEnum<RetentionPolicy>>() {}
+      "null",
+      new TypeReference<WireSafeEnum<RetentionPolicy>>() {}
     );
     assertThat(wrapper).isNull();
   }
@@ -219,24 +227,23 @@ public class WireSafeEnumTest {
   public void itDoesntAllowNullJsonValues() {
     Throwable t = catchThrowable(() -> WireSafeEnum.fromJson(NullJsonEnum.class, "ABC"));
     assertThat(t)
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("NullJsonEnum")
-        .hasMessageContaining("DEF")
-        .hasMessageContaining("null");
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("NullJsonEnum")
+      .hasMessageContaining("DEF")
+      .hasMessageContaining("null");
   }
 
   @Test
   public void itDoesntAllowNumericJsonValues() {
     Throwable t = catchThrowable(() -> WireSafeEnum.of(NumericJsonEnum.ABC));
     assertThat(t)
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("NumericJsonEnum");
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("NumericJsonEnum");
   }
 
   @Test
   public void itBuildsFromEnum() {
-    WireSafeEnum<RetentionPolicy> wrapper =
-        WireSafeEnum.of(RetentionPolicy.SOURCE);
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.of(RetentionPolicy.SOURCE);
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("SOURCE");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(RetentionPolicy.SOURCE));
@@ -244,8 +251,7 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromEnumWithCustomJson() {
-    WireSafeEnum<CustomJsonEnum> wrapper =
-        WireSafeEnum.of(CustomJsonEnum.ABC);
+    WireSafeEnum<CustomJsonEnum> wrapper = WireSafeEnum.of(CustomJsonEnum.ABC);
     assertThat(wrapper.enumType()).isEqualTo(CustomJsonEnum.class);
     assertThat(wrapper.asString()).isEqualTo("CBA");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CustomJsonEnum.ABC));
@@ -253,8 +259,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromKnownString() {
-    WireSafeEnum<RetentionPolicy> wrapper =
-        WireSafeEnum.fromJson(RetentionPolicy.class, "SOURCE");
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.fromJson(
+      RetentionPolicy.class,
+      "SOURCE"
+    );
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("SOURCE");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(RetentionPolicy.SOURCE));
@@ -262,8 +270,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromKnownStringWithCustomJson() {
-    WireSafeEnum<CustomJsonEnum> wrapper =
-        WireSafeEnum.fromJson(CustomJsonEnum.class, "CBA");
+    WireSafeEnum<CustomJsonEnum> wrapper = WireSafeEnum.fromJson(
+      CustomJsonEnum.class,
+      "CBA"
+    );
     assertThat(wrapper.enumType()).isEqualTo(CustomJsonEnum.class);
     assertThat(wrapper.asString()).isEqualTo("CBA");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CustomJsonEnum.ABC));
@@ -271,8 +281,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromKnownStringWithCollidingJson() {
-    WireSafeEnum<CollidingJsonEnum> wrapper =
-        WireSafeEnum.fromJson(CollidingJsonEnum.class, "123");
+    WireSafeEnum<CollidingJsonEnum> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnum.class,
+      "123"
+    );
     assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnum.class);
     assertThat(wrapper.asString()).isEqualTo("123");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CollidingJsonEnum.ABC));
@@ -280,8 +292,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromKnownStringWithCollidingJsonAndCreator() {
-    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper =
-        WireSafeEnum.fromJson(CollidingJsonEnumWithCreator.class, "123");
+    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnumWithCreator.class,
+      "123"
+    );
     assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
     assertThat(wrapper.asString()).isEqualTo("123");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CollidingJsonEnumWithCreator.DEF));
@@ -289,8 +303,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromUnknownString() {
-    WireSafeEnum<RetentionPolicy> wrapper =
-        WireSafeEnum.fromJson(RetentionPolicy.class, "INVALID");
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.fromJson(
+      RetentionPolicy.class,
+      "INVALID"
+    );
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("INVALID");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
@@ -298,8 +314,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromUnknownStringWithCustomJson() {
-    WireSafeEnum<CustomJsonEnum> wrapper =
-        WireSafeEnum.fromJson(CustomJsonEnum.class, "ABC");
+    WireSafeEnum<CustomJsonEnum> wrapper = WireSafeEnum.fromJson(
+      CustomJsonEnum.class,
+      "ABC"
+    );
     assertThat(wrapper.enumType()).isEqualTo(CustomJsonEnum.class);
     assertThat(wrapper.asString()).isEqualTo("ABC");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
@@ -307,8 +325,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromUnknownStringWithCollidingJson() {
-    WireSafeEnum<CollidingJsonEnum> wrapper =
-        WireSafeEnum.fromJson(CollidingJsonEnum.class, "ABC");
+    WireSafeEnum<CollidingJsonEnum> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnum.class,
+      "ABC"
+    );
     assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnum.class);
     assertThat(wrapper.asString()).isEqualTo("ABC");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
@@ -316,8 +336,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itBuildsFromUnknownStringWithCollidingJsonAndCreator() {
-    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper =
-        WireSafeEnum.fromJson(CollidingJsonEnumWithCreator.class, "ABC");
+    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnumWithCreator.class,
+      "ABC"
+    );
     assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
     assertThat(wrapper.asString()).isEqualTo("ABC");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
@@ -343,7 +365,10 @@ public class WireSafeEnumTest {
 
   @Test
   public void itSerializesKnownValueAsStringWithCollidingJson() throws IOException {
-    WireSafeEnum<CollidingJsonEnum> wrapper = WireSafeEnum.fromJson(CollidingJsonEnum.class, "123");
+    WireSafeEnum<CollidingJsonEnum> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnum.class,
+      "123"
+    );
     writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"123\""));
 
     wrapper = WireSafeEnum.of(CollidingJsonEnum.ABC);
@@ -351,9 +376,12 @@ public class WireSafeEnumTest {
   }
 
   @Test
-  public void itSerializesKnownValueAsStringWithCollidingJsonAndCreator() throws IOException {
-    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper =
-        WireSafeEnum.fromJson(CollidingJsonEnumWithCreator.class, "123");
+  public void itSerializesKnownValueAsStringWithCollidingJsonAndCreator()
+    throws IOException {
+    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnumWithCreator.class,
+      "123"
+    );
     writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"123\""));
 
     wrapper = WireSafeEnum.of(CollidingJsonEnumWithCreator.ABC);
@@ -362,176 +390,234 @@ public class WireSafeEnumTest {
 
   @Test
   public void itSerializesUnknownValueAsString() throws IOException {
-    WireSafeEnum<RetentionPolicy> wrapper =
-        WireSafeEnum.fromJson(RetentionPolicy.class, "INVALID");
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.fromJson(
+      RetentionPolicy.class,
+      "INVALID"
+    );
     writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"INVALID\""));
   }
 
   @Test
   public void itSerializesUnknownValueAsStringWithCustomJson() throws IOException {
-    WireSafeEnum<CustomJsonEnum> wrapper =
-        WireSafeEnum.fromJson(CustomJsonEnum.class, "ABC");
+    WireSafeEnum<CustomJsonEnum> wrapper = WireSafeEnum.fromJson(
+      CustomJsonEnum.class,
+      "ABC"
+    );
     writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"ABC\""));
   }
 
   @Test
   public void itSerializesUnknownValueAsStringWithCollidingJson() throws IOException {
-    WireSafeEnum<CollidingJsonEnum> wrapper =
-        WireSafeEnum.fromJson(CollidingJsonEnum.class, "ABC");
+    WireSafeEnum<CollidingJsonEnum> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnum.class,
+      "ABC"
+    );
     writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"ABC\""));
   }
 
   @Test
-  public void itSerializesUnknownValueAsStringWithCollidingJsonAndCreator() throws IOException {
-    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper =
-        WireSafeEnum.fromJson(CollidingJsonEnumWithCreator.class, "ABC");
+  public void itSerializesUnknownValueAsStringWithCollidingJsonAndCreator()
+    throws IOException {
+    WireSafeEnum<CollidingJsonEnumWithCreator> wrapper = WireSafeEnum.fromJson(
+      CollidingJsonEnumWithCreator.class,
+      "ABC"
+    );
     writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"ABC\""));
   }
 
   @Test
   public void itDeserializesFromKnownString() throws IOException {
-    readFromJson("\"SOURCE\"", new TypeReference<WireSafeEnum<RetentionPolicy>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
-      assertThat(wrapper.asString()).isEqualTo("SOURCE");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.of(RetentionPolicy.SOURCE));
-    });
+    readFromJson("\"SOURCE\"", new TypeReference<WireSafeEnum<RetentionPolicy>>() {})
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
+          assertThat(wrapper.asString()).isEqualTo("SOURCE");
+          assertThat(wrapper.asEnum()).isEqualTo(Optional.of(RetentionPolicy.SOURCE));
+        }
+      );
   }
 
   @Test
   public void itDeserializesFromKnownStringWithCustomJson() throws IOException {
-    readFromJson("\"CBA\"", new TypeReference<WireSafeEnum<CustomJsonEnum>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(CustomJsonEnum.class);
-      assertThat(wrapper.asString()).isEqualTo("CBA");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CustomJsonEnum.ABC));
-    });
+    readFromJson("\"CBA\"", new TypeReference<WireSafeEnum<CustomJsonEnum>>() {})
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(CustomJsonEnum.class);
+          assertThat(wrapper.asString()).isEqualTo("CBA");
+          assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CustomJsonEnum.ABC));
+        }
+      );
   }
 
   @Test
   public void itDeserializesFromKnownStringWithCollidingJson() throws IOException {
-    readFromJson("\"123\"", new TypeReference<WireSafeEnum<CollidingJsonEnum>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnum.class);
-      assertThat(wrapper.asString()).isEqualTo("123");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CollidingJsonEnum.ABC));
-    });
+    readFromJson("\"123\"", new TypeReference<WireSafeEnum<CollidingJsonEnum>>() {})
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnum.class);
+          assertThat(wrapper.asString()).isEqualTo("123");
+          assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CollidingJsonEnum.ABC));
+        }
+      );
   }
 
   @Test
-  public void itDeserializesFromKnownStringWithCollidingJsonAndCreator() throws IOException {
-    readFromJson("\"123\"", new TypeReference<WireSafeEnum<CollidingJsonEnumWithCreator>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
-      assertThat(wrapper.asString()).isEqualTo("123");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CollidingJsonEnumWithCreator.DEF));
-    });
+  public void itDeserializesFromKnownStringWithCollidingJsonAndCreator()
+    throws IOException {
+    readFromJson(
+        "\"123\"",
+        new TypeReference<WireSafeEnum<CollidingJsonEnumWithCreator>>() {}
+      )
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
+          assertThat(wrapper.asString()).isEqualTo("123");
+          assertThat(wrapper.asEnum())
+            .isEqualTo(Optional.of(CollidingJsonEnumWithCreator.DEF));
+        }
+      );
   }
 
   @Test
   public void itDeserializesFromUnknownString() throws IOException {
-    readFromJson("\"INVALID\"", new TypeReference<WireSafeEnum<RetentionPolicy>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
-      assertThat(wrapper.asString()).isEqualTo("INVALID");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
-    });
+    readFromJson("\"INVALID\"", new TypeReference<WireSafeEnum<RetentionPolicy>>() {})
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
+          assertThat(wrapper.asString()).isEqualTo("INVALID");
+          assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
+        }
+      );
   }
 
   @Test
   public void itDeserializesFromUnknownStringWithCustomJson() throws IOException {
-    readFromJson("\"ABC\"", new TypeReference<WireSafeEnum<CustomJsonEnum>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(CustomJsonEnum.class);
-      assertThat(wrapper.asString()).isEqualTo("ABC");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
-    });
+    readFromJson("\"ABC\"", new TypeReference<WireSafeEnum<CustomJsonEnum>>() {})
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(CustomJsonEnum.class);
+          assertThat(wrapper.asString()).isEqualTo("ABC");
+          assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
+        }
+      );
   }
 
   @Test
   public void itDeserializesFromUnknownStringWithCollidingJson() throws IOException {
-    readFromJson("\"ABC\"", new TypeReference<WireSafeEnum<CollidingJsonEnum>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnum.class);
-      assertThat(wrapper.asString()).isEqualTo("ABC");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
-    });
+    readFromJson("\"ABC\"", new TypeReference<WireSafeEnum<CollidingJsonEnum>>() {})
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnum.class);
+          assertThat(wrapper.asString()).isEqualTo("ABC");
+          assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
+        }
+      );
   }
 
   @Test
-  public void itDeserializesFromUnknownStringWithCollidingJsonAndCreator() throws IOException {
-    readFromJson("\"ABC\"", new TypeReference<WireSafeEnum<CollidingJsonEnumWithCreator>>() {}).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
-      assertThat(wrapper.asString()).isEqualTo("ABC");
-      assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
-    });
+  public void itDeserializesFromUnknownStringWithCollidingJsonAndCreator()
+    throws IOException {
+    readFromJson(
+        "\"ABC\"",
+        new TypeReference<WireSafeEnum<CollidingJsonEnumWithCreator>>() {}
+      )
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
+          assertThat(wrapper.asString()).isEqualTo("ABC");
+          assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
+        }
+      );
   }
 
   @Test
   public void itThrowsForValueFromUnknownString() {
-    WireSafeEnum<RetentionPolicy> wrapper =
-        WireSafeEnum.fromJson(RetentionPolicy.class, "INVALID");
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.fromJson(
+      RetentionPolicy.class,
+      "INVALID"
+    );
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("INVALID");
 
     assertThatThrownBy(wrapper::asEnumOrThrow)
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Value 'INVALID' is not valid for enum of type 'RetentionPolicy'. Valid values are: [CLASS, RUNTIME, SOURCE]");
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessage(
+        "Value 'INVALID' is not valid for enum of type 'RetentionPolicy'. Valid values are: [CLASS, RUNTIME, SOURCE]"
+      );
   }
 
   @Test
   public void itDoesNotThrowForValueFromKnownString() {
-    WireSafeEnum<RetentionPolicy> wrapper =
-        WireSafeEnum.fromJson(RetentionPolicy.class, "SOURCE");
+    WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.fromJson(
+      RetentionPolicy.class,
+      "SOURCE"
+    );
     assertThat(wrapper.enumType()).isEqualTo(RetentionPolicy.class);
     assertThat(wrapper.asString()).isEqualTo("SOURCE");
 
-    assertThat(wrapper.asEnumOrThrow())
-        .isEqualTo(RetentionPolicy.SOURCE);
+    assertThat(wrapper.asEnumOrThrow()).isEqualTo(RetentionPolicy.SOURCE);
   }
 
   @Test
   public void itDelegatesToJsonCreatorIfNotCached() throws Exception {
     TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>> type = new TypeReference<WireSafeEnum<EnumWithMultipleSerializedForms>>() {};
 
-    readFromJson("\"ABC\"", type).forEach(wrapper ->
-        assertCorrectEnum(wrapper, "ABC", EnumWithMultipleSerializedForms.ABC)
-    );
-    readFromJson("\"abc\"", type).forEach(wrapper ->
-        assertCorrectEnum(wrapper, "abc", EnumWithMultipleSerializedForms.ABC)
-    );
-    readFromJson("\"def\"", type).forEach(wrapper ->
-        assertCorrectEnum(wrapper, "def", EnumWithMultipleSerializedForms.DEF)
-    );
-    readFromJson("\"xyz\"", type).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
-      assertThat(wrapper.asString()).isEqualTo("xyz");
-      assertThat(wrapper.asEnum()).isEmpty();
-    });
+    readFromJson("\"ABC\"", type)
+      .forEach(
+        wrapper -> assertCorrectEnum(wrapper, "ABC", EnumWithMultipleSerializedForms.ABC)
+      );
+    readFromJson("\"abc\"", type)
+      .forEach(
+        wrapper -> assertCorrectEnum(wrapper, "abc", EnumWithMultipleSerializedForms.ABC)
+      );
+    readFromJson("\"def\"", type)
+      .forEach(
+        wrapper -> assertCorrectEnum(wrapper, "def", EnumWithMultipleSerializedForms.DEF)
+      );
+    readFromJson("\"xyz\"", type)
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(EnumWithMultipleSerializedForms.class);
+          assertThat(wrapper.asString()).isEqualTo("xyz");
+          assertThat(wrapper.asEnum()).isEmpty();
+        }
+      );
   }
 
   @Test
   public void itHandlesNullFromJsonCreator() throws Exception {
     TypeReference<WireSafeEnum<EnumWithNullableJsonCreator>> type = new TypeReference<WireSafeEnum<EnumWithNullableJsonCreator>>() {};
 
-    readFromJson("\"ABC\"", type).forEach(wrapper ->
-        assertCorrectEnum(wrapper, "ABC", EnumWithNullableJsonCreator.ABC)
-    );
-    readFromJson("\"xyz\"", type).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(EnumWithNullableJsonCreator.class);
-      assertThat(wrapper.asString()).isEqualTo("xyz");
-      assertThat(wrapper.asEnum()).isEmpty();
-    });
+    readFromJson("\"ABC\"", type)
+      .forEach(
+        wrapper -> assertCorrectEnum(wrapper, "ABC", EnumWithNullableJsonCreator.ABC)
+      );
+    readFromJson("\"xyz\"", type)
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(EnumWithNullableJsonCreator.class);
+          assertThat(wrapper.asString()).isEqualTo("xyz");
+          assertThat(wrapper.asEnum()).isEmpty();
+        }
+      );
   }
 
   @Test
   public void itHandlesEnumsWithConverters() throws Exception {
     TypeReference<WireSafeEnum<EnumWithConverter>> type = new TypeReference<WireSafeEnum<EnumWithConverter>>() {};
 
-    readFromJson("\"1\"", type).forEach(wrapper ->
-        assertCorrectEnum(wrapper, "1", EnumWithConverter.ABC)
-    );
-    readFromJson("\"2\"", type).forEach(wrapper ->
-        assertCorrectEnum(wrapper, "2", EnumWithConverter.DEF)
-    );
-    readFromJson("\"3\"", type).forEach(wrapper -> {
-      assertThat(wrapper.enumType()).isEqualTo(EnumWithConverter.class);
-      assertThat(wrapper.asString()).isEqualTo("3");
-      assertThat(wrapper.asEnum()).isEmpty();
-    });
+    readFromJson("\"1\"", type)
+      .forEach(wrapper -> assertCorrectEnum(wrapper, "1", EnumWithConverter.ABC));
+    readFromJson("\"2\"", type)
+      .forEach(wrapper -> assertCorrectEnum(wrapper, "2", EnumWithConverter.DEF));
+    readFromJson("\"3\"", type)
+      .forEach(
+        wrapper -> {
+          assertThat(wrapper.enumType()).isEqualTo(EnumWithConverter.class);
+          assertThat(wrapper.asString()).isEqualTo("3");
+          assertThat(wrapper.asEnum()).isEmpty();
+        }
+      );
   }
 
   @Test
@@ -541,8 +627,8 @@ public class WireSafeEnumTest {
     original.put(WireSafeEnum.fromJson(RetentionPolicy.class, "INVALID"), 456);
 
     Map<WireSafeEnum<RetentionPolicy>, Integer> parsed = MAPPER.readValue(
-        MAPPER.writeValueAsString(original),
-        new TypeReference<Map<WireSafeEnum<RetentionPolicy>, Integer>>() {}
+      MAPPER.writeValueAsString(original),
+      new TypeReference<Map<WireSafeEnum<RetentionPolicy>, Integer>>() {}
     );
 
     assertThat(parsed).isEqualTo(original);
@@ -552,23 +638,39 @@ public class WireSafeEnumTest {
     Map<WireSafeEnum<?>, Integer> map = Collections.singletonMap(wireSafeEnum, 123);
     String mapKey = Iterators.getOnlyElement(MAPPER.valueToTree(map).fieldNames());
 
-    return Stream.of(MAPPER.writeValueAsString(wireSafeEnum), MAPPER.writeValueAsString(mapKey));
+    return Stream.of(
+      MAPPER.writeValueAsString(wireSafeEnum),
+      MAPPER.writeValueAsString(mapKey)
+    );
   }
 
-  private <T extends Enum<T>> Stream<WireSafeEnum<T>> readFromJson(String json, TypeReference<WireSafeEnum<T>> typeReference) throws IOException {
-    Map<WireSafeEnum<T>, Integer> map = MAPPER.readValue("{" + json + ": 123}", MAPPER.getTypeFactory().constructMapType(
-        HashMap.class,
-        MAPPER.constructType(typeReference.getType()),
-        MAPPER.constructType(Integer.class))
+  private <T extends Enum<T>> Stream<WireSafeEnum<T>> readFromJson(
+    String json,
+    TypeReference<WireSafeEnum<T>> typeReference
+  )
+    throws IOException {
+    Map<WireSafeEnum<T>, Integer> map = MAPPER.readValue(
+      "{" + json + ": 123}",
+      MAPPER
+        .getTypeFactory()
+        .constructMapType(
+          HashMap.class,
+          MAPPER.constructType(typeReference.getType()),
+          MAPPER.constructType(Integer.class)
+        )
     );
 
     return Stream.of(
-        MAPPER.readValue(json, typeReference),
-        Iterables.getOnlyElement(map.keySet())
+      MAPPER.readValue(json, typeReference),
+      Iterables.getOnlyElement(map.keySet())
     );
   }
 
-  private <T extends Enum<T>> void assertCorrectEnum(WireSafeEnum<?> wrapper, String stringValue, T enumValue) {
+  private <T extends Enum<T>> void assertCorrectEnum(
+    WireSafeEnum<?> wrapper,
+    String stringValue,
+    T enumValue
+  ) {
     assertThat(wrapper.enumType()).isEqualTo(enumValue.getClass());
     assertThat(wrapper.asString()).isEqualTo(stringValue);
     assertThat(wrapper.asEnum().isPresent()).isTrue();

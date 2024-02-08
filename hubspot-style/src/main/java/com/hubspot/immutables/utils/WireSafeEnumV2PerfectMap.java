@@ -1,5 +1,22 @@
 package com.hubspot.immutables.utils;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -14,21 +31,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualKeyDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.ForwardingMap;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 import com.hubspot.immutables.utils.WireSafeEnum.KeyDeserializer;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 
 /**
  * This utility is meant to help with the fragility introduced by
@@ -52,22 +58,22 @@ import javax.annotation.Nonnull;
  *    of the field will need to get updated
  */
 @JsonDeserialize(using = Deserializer.class, keyUsing = KeyDeserializer.class)
-public final class WireSafeEnum<T extends Enum<T>> {
+public final class WireSafeEnumV2PerfectMap<T extends Enum<T>> {
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE = new ConcurrentHashMap<>();
-  private static final Map<Class<?>, Map<String, WireSafeEnum<?>>> JSON_LOOKUP_CACHE = new ConcurrentHashMap<>();
+  private static final Map<Class<?>, Map<?, WireSafeEnumV2PerfectMap<?>>> ENUM_LOOKUP_CACHE = new CopyOnWriteMap<>();
+  private static final Map<Class<?>, Map<String, WireSafeEnumV2PerfectMap<?>>> JSON_LOOKUP_CACHE = new CopyOnWriteMap<>();
 
   private final Class<T> enumType;
   private final String jsonValue;
   private final Optional<T> enumValue;
 
-  private WireSafeEnum(Class<T> enumType, String jsonValue, T enumValue) {
+  private WireSafeEnumV2PerfectMap(Class<T> enumType, String jsonValue, T enumValue) {
     this.enumType = checkNotNull(enumType, "enumType");
     this.jsonValue = checkNotNull(jsonValue, "jsonValue");
     this.enumValue = Optional.of(checkNotNull(enumValue, "enumValue"));
   }
 
-  private WireSafeEnum(Class<T> enumType, String jsonValue) {
+  private WireSafeEnumV2PerfectMap(Class<T> enumType, String jsonValue) {
     this.enumType = checkNotNull(enumType, "enumType");
     this.jsonValue = checkNotNull(jsonValue, "jsonValue");
     this.enumValue = Optional.empty();
@@ -75,40 +81,50 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
   @Nonnull
   @SuppressWarnings("unchecked")
-  public static <T extends Enum<T>> WireSafeEnum<T> of(@Nonnull T value) {
+  public static <T extends Enum<T>> WireSafeEnumV2PerfectMap<T> of(@Nonnull T value) {
     checkNotNull(value, "value");
 
     Class<T> enumType = getRealEnumType((Class<T>) value.getClass());
-    ensureEnumCacheInitialized(enumType);
-    return (WireSafeEnum<T>) ENUM_LOOKUP_CACHE.get(enumType).get(value);
+    Map<?, WireSafeEnumV2PerfectMap<?>> enumLookupMap = ENUM_LOOKUP_CACHE.get(enumType);
+    if (enumLookupMap == null) {
+      ensureEnumCacheInitialized(enumType);
+      enumLookupMap = ENUM_LOOKUP_CACHE.get(enumType);
+    }
+    return (WireSafeEnumV2PerfectMap<T>) enumLookupMap.get(value);
   }
 
   @Nonnull
-  public static <T extends Enum<T>> WireSafeEnum<T> fromJson(
+  public static <T extends Enum<T>> WireSafeEnumV2PerfectMap<T> fromJson(
     @Nonnull Class<T> enumType,
     @Nonnull String jsonValue
   ) {
-    return fromJson(enumType, jsonValue, WireSafeEnum::new);
+    return fromJson(enumType, jsonValue, WireSafeEnumV2PerfectMap::new);
   }
 
   @Nonnull
   @SuppressWarnings("unchecked")
-  private static <T extends Enum<T>> WireSafeEnum<T> fromJson(
+  private static <T extends Enum<T>> WireSafeEnumV2PerfectMap<T> fromJson(
     @Nonnull Class<T> enumType,
     @Nonnull String jsonValue,
-    @Nonnull BiFunction<Class<T>, String, WireSafeEnum<T>> fallback
+    @Nonnull BiFunction<Class<T>, String, WireSafeEnumV2PerfectMap<T>> fallback
   ) {
     checkNotNull(enumType, "enumType");
     checkNotNull(jsonValue, "jsonValue");
     checkNotNull(fallback, "fallback");
 
     enumType = getRealEnumType(enumType);
-    ensureJsonCacheInitialized(enumType);
-    WireSafeEnum<?> cached = JSON_LOOKUP_CACHE.get(enumType).get(jsonValue);
+    Map<String, WireSafeEnumV2PerfectMap<?>> jsonLookupMap = JSON_LOOKUP_CACHE.get(
+      enumType
+    );
+    if (jsonLookupMap == null) {
+      ensureJsonCacheInitialized(enumType);
+      jsonLookupMap = JSON_LOOKUP_CACHE.get(enumType);
+    }
+    WireSafeEnumV2PerfectMap<?> cached = jsonLookupMap.get(jsonValue);
     if (cached == null) {
       return fallback.apply(enumType, jsonValue);
     } else {
-      return (WireSafeEnum<T>) cached;
+      return (WireSafeEnumV2PerfectMap<T>) cached;
     }
   }
 
@@ -155,11 +171,16 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   private IllegalStateException getInvalidValueException() {
-    Collection<WireSafeEnum<?>> wiresafeEnumTypes = JSON_LOOKUP_CACHE
+    Collection<WireSafeEnumV2PerfectMap<?>> wiresafeEnumTypes = JSON_LOOKUP_CACHE
       .get(enumType)
       .values();
     String validMembers = Arrays.toString(
-      wiresafeEnumTypes.stream().map(WireSafeEnum::asString).distinct().sorted().toArray()
+      wiresafeEnumTypes
+        .stream()
+        .map(WireSafeEnumV2PerfectMap::asString)
+        .distinct()
+        .sorted()
+        .toArray()
     );
 
     String message = String.format(
@@ -186,7 +207,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
       return false;
     }
 
-    WireSafeEnum<?> that = (WireSafeEnum<?>) o;
+    WireSafeEnumV2PerfectMap<?> that = (WireSafeEnumV2PerfectMap<?>) o;
     return (
       Objects.equals(enumType, that.enumType) &&
       Objects.equals(jsonValue, that.jsonValue) &&
@@ -209,7 +230,10 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   private static <T> T checkNotNull(T o, String name) {
-    return Objects.requireNonNull(o, name + " must not be null");
+    if (o == null) {
+      throw new NullPointerException(name + " must not be null");
+    }
+    return o;
   }
 
   private static <T extends Enum<T>> void ensureEnumCacheInitialized(Class<T> enumType) {
@@ -240,10 +264,8 @@ public final class WireSafeEnum<T extends Enum<T>> {
       MAPPER.getTypeFactory().constructArrayType(enumType)
     );
 
-    Map<T, WireSafeEnum<?>> enumMap = new EnumMap<>(enumType);
-    Map<String, WireSafeEnum<?>> jsonMap = new HashMap<>(
-      mapCapacity(enumConstants.length)
-    );
+    Map<T, WireSafeEnumV2PerfectMap<?>> enumMap = new EnumMap<>(enumType);
+    Map<String, WireSafeEnumV2PerfectMap<?>> jsonMap = new HashMap<>(mapCapacity(enumConstants.length));
 
     for (int i = 0; i < enumConstants.length; i++) {
       T enumValue = enumConstants[i];
@@ -264,7 +286,11 @@ public final class WireSafeEnum<T extends Enum<T>> {
         throw new IllegalStateException(message);
       }
 
-      WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(enumType, jsonValue, enumValue);
+      WireSafeEnumV2PerfectMap<T> wireSafeEnum = new WireSafeEnumV2PerfectMap<>(
+        enumType,
+        jsonValue,
+        enumValue
+      );
       enumMap.put(enumValue, wireSafeEnum);
       /*
       If the deserialized value doesn't match, then this enum
@@ -276,7 +302,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     }
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);
-    JSON_LOOKUP_CACHE.put(enumType, jsonMap);
+    JSON_LOOKUP_CACHE.put(enumType, PerfectMap.of(jsonMap).orElse(jsonMap));
   }
 
   private static <T extends Enum<T>> Class<T> getRealEnumType(Class<T> enumType) {
@@ -308,17 +334,20 @@ public final class WireSafeEnum<T extends Enum<T>> {
     if (elements < 3) {
       return elements + 1;
     } else {
-      return (int) ((float) elements / 0.75F + 1.0F);
+      return (int) ((float) elements / 0.50F + 1.0F);
     }
   }
 
   public static class Deserializer
-    extends JsonDeserializer<WireSafeEnum<?>>
+    extends JsonDeserializer<WireSafeEnumV2PerfectMap<?>>
     implements ContextualDeserializer {
-    private static final Map<JavaType, JsonDeserializer<WireSafeEnum<?>>> DESERIALIZER_CACHE = new ConcurrentHashMap<>();
+    private static final Map<JavaType, JsonDeserializer<WireSafeEnumV2PerfectMap<?>>> DESERIALIZER_CACHE = new ConcurrentHashMap<>();
 
     @Override
-    public WireSafeEnum<?> deserialize(JsonParser p, DeserializationContext ctxt)
+    public WireSafeEnumV2PerfectMap<?> deserialize(
+      JsonParser p,
+      DeserializationContext ctxt
+    )
       throws IOException {
       throw ctxt.mappingException("Expected createContextual to be called");
     }
@@ -336,20 +365,23 @@ public final class WireSafeEnum<T extends Enum<T>> {
       return DESERIALIZER_CACHE.computeIfAbsent(javaType, Deserializer::newDeserializer);
     }
 
-    private static <T extends Enum<T>> JsonDeserializer<WireSafeEnum<?>> newDeserializer(
+    private static <T extends Enum<T>> JsonDeserializer<WireSafeEnumV2PerfectMap<?>> newDeserializer(
       JavaType enumType
     ) {
-      return new JsonDeserializer<WireSafeEnum<?>>() {
+      return new JsonDeserializer<WireSafeEnumV2PerfectMap<?>>() {
 
         @Override
-        public WireSafeEnum<T> deserialize(JsonParser p, DeserializationContext ctxt)
+        public WireSafeEnumV2PerfectMap<T> deserialize(
+          JsonParser p,
+          DeserializationContext ctxt
+        )
           throws IOException {
           if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
             return null;
           } else if (p.getCurrentToken() == JsonToken.VALUE_STRING) {
             @SuppressWarnings("unchecked")
             Class<T> rawType = (Class<T>) enumType.getRawClass();
-            return WireSafeEnum.fromJson(
+            return WireSafeEnumV2PerfectMap.fromJson(
               rawType,
               p.getText(),
               (klass, value) -> create(enumType, value, p, ctxt)
@@ -406,7 +438,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
             return null;
           } else {
             Class<T> rawType = (Class<T>) enumType.getRawClass();
-            return WireSafeEnum.fromJson(
+            return WireSafeEnumV2PerfectMap.fromJson(
               rawType,
               key,
               (klass, value) -> create(enumType, value, ctxt.getParser(), ctxt)
@@ -422,10 +454,15 @@ public final class WireSafeEnum<T extends Enum<T>> {
     DeserializationContext ctxt
   )
     throws JsonMappingException {
-    if (contextualType == null || !contextualType.hasRawClass(WireSafeEnum.class)) {
+    if (
+      contextualType == null ||
+      !contextualType.hasRawClass(WireSafeEnumV2PerfectMap.class)
+    ) {
       throw ctxt.mappingException("Can not handle contextualType: " + contextualType);
     } else {
-      JavaType[] typeParameters = contextualType.findTypeParameters(WireSafeEnum.class);
+      JavaType[] typeParameters = contextualType.findTypeParameters(
+        WireSafeEnumV2PerfectMap.class
+      );
       if (typeParameters.length != 1) {
         throw ctxt.mappingException("Can not discover enum type for: " + contextualType);
       } else if (!typeParameters[0].isEnumType()) {
@@ -438,7 +475,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     }
   }
 
-  private static <T extends Enum<T>> WireSafeEnum<T> create(
+  private static <T extends Enum<T>> WireSafeEnumV2PerfectMap<T> create(
     JavaType enumType,
     String jsonValue,
     JsonParser parser,
@@ -450,8 +487,8 @@ public final class WireSafeEnum<T extends Enum<T>> {
     Optional<T> maybeEnumValue = deserializeValue(enumType, parser, ctxt);
 
     return maybeEnumValue
-      .map(enumValue -> new WireSafeEnum<>(rawClass, jsonValue, enumValue))
-      .orElseGet(() -> new WireSafeEnum<>(rawClass, jsonValue));
+      .map(enumValue -> new WireSafeEnumV2PerfectMap<>(rawClass, jsonValue, enumValue))
+      .orElseGet(() -> new WireSafeEnumV2PerfectMap<>(rawClass, jsonValue));
   }
 
   @SuppressWarnings("unchecked")
@@ -471,6 +508,56 @@ public final class WireSafeEnum<T extends Enum<T>> {
       return Optional.ofNullable((T) deserializer.deserialize(p, ctxt));
     } catch (Exception e) {
       return Optional.empty();
+    }
+  }
+
+  // Lock behavior is inspired by CopyOnWriteArrayList...
+  // reads aren't locked because they never get a reference to a mutating
+  // object
+  private static class CopyOnWriteMap<K, V> extends ForwardingMap<K, V> {
+    private final Object lock = new Object();
+    private transient volatile Map<K, V> current = Collections.emptyMap();
+
+    @Override
+    protected Map<K, V> delegate() {
+      return current;
+    }
+
+    @CheckForNull
+    @Override
+    public V put(K key, V value) {
+      synchronized (lock) {
+        V oldValue = current.get(key);
+        this.current =
+          ImmutableMap
+            .<K, V>builder()
+            .putAll(this.current)
+            .put(key, value)
+            .buildKeepingLast();
+        return oldValue;
+      }
+    }
+
+    @CheckForNull
+    @Override
+    public V get(@CheckForNull Object key) {
+      return current.get(key);
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> map) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clear() {
+      throw new UnsupportedOperationException();
+    }
+
+    @CheckForNull
+    @Override
+    public V remove(@CheckForNull Object key) {
+      throw new UnsupportedOperationException();
     }
   }
 }
