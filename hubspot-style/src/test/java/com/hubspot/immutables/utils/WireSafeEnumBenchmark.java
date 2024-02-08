@@ -44,42 +44,13 @@ public class WireSafeEnumBenchmark {
     }
   }
 
-//    @Benchmark
-  @Warmup(iterations = 1, time = 2, timeUnit = TimeUnit.SECONDS)
-  @Measurement(iterations = 4, time = 7, timeUnit = TimeUnit.SECONDS)
-  public void parse(ExecutionPlan plan, Blackhole blackhole) throws Throwable {
-    for (String value : plan.directionsToParse) {
-      blackhole.consume(WireSafeEnum.fromJson(Direction.class, value));
-    }
-  }
-
-  //@Benchmark
-  @Warmup(iterations = 1, time = 2, timeUnit = TimeUnit.SECONDS)
-  @Measurement(iterations = 4, time = 7, timeUnit = TimeUnit.SECONDS)
-  public void parseV2(ExecutionPlan plan, Blackhole blackhole) throws Throwable {
-    for (String value : plan.directionsToParse) {
-      blackhole.consume(WireSafeEnumV2.fromJson(Direction.class, value));
-    }
-  }
-
-  //@Benchmark
-  @Warmup(iterations = 1, time = 2, timeUnit = TimeUnit.SECONDS)
-  @Measurement(iterations = 4, time = 7, timeUnit = TimeUnit.SECONDS)
-  public void parseV2ImmutableMap(ExecutionPlan plan, Blackhole blackhole)
-    throws Throwable {
-    for (String value : plan.directionsToParse) {
-      blackhole.consume(WireSafeEnumV2ImmutableMap.fromJson(Direction.class, value));
-    }
-  }
-
   @Benchmark
-
   @Warmup(iterations = 1, time = 2, timeUnit = TimeUnit.SECONDS)
   @Measurement(iterations = 4, time = 17, timeUnit = TimeUnit.SECONDS)
   public void parseV2PerfectMap(ExecutionPlan plan, Blackhole blackhole)
     throws Throwable {
     for (String value : plan.directionsToParse) {
-      blackhole.consume(WireSafeEnumV2PerfectMap.fromJson(Direction.class, value));
+      blackhole.consume(WireSafeEnum.fromJson(Direction.class, value));
     }
   }
 

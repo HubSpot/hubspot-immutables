@@ -1,5 +1,22 @@
 package com.hubspot.immutables.utils;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -14,21 +31,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualKeyDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.ForwardingMap;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 import com.hubspot.immutables.utils.WireSafeEnum.KeyDeserializer;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 
 /**
  * This utility is meant to help with the fragility introduced by
@@ -54,8 +60,8 @@ import javax.annotation.Nonnull;
 @JsonDeserialize(using = Deserializer.class, keyUsing = KeyDeserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE = new ConcurrentHashMap<>();
-  private static final Map<Class<?>, Map<String, WireSafeEnum<?>>> JSON_LOOKUP_CACHE = new ConcurrentHashMap<>();
+  private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE = new CopyOnWriteMap<>();
+  private static final Map<Class<?>, Map<String, WireSafeEnum<?>>> JSON_LOOKUP_CACHE = new CopyOnWriteMap<>();
 
   private final Class<T> enumType;
   private final String jsonValue;
@@ -79,8 +85,12 @@ public final class WireSafeEnum<T extends Enum<T>> {
     checkNotNull(value, "value");
 
     Class<T> enumType = getRealEnumType((Class<T>) value.getClass());
-    ensureEnumCacheInitialized(enumType);
-    return (WireSafeEnum<T>) ENUM_LOOKUP_CACHE.get(enumType).get(value);
+    Map<?, WireSafeEnum<?>> enumLookupMap = ENUM_LOOKUP_CACHE.get(enumType);
+    if (enumLookupMap == null) {
+      ensureEnumCacheInitialized(enumType);
+      enumLookupMap = ENUM_LOOKUP_CACHE.get(enumType);
+    }
+    return (WireSafeEnum<T>) enumLookupMap.get(value);
   }
 
   @Nonnull
@@ -103,8 +113,14 @@ public final class WireSafeEnum<T extends Enum<T>> {
     checkNotNull(fallback, "fallback");
 
     enumType = getRealEnumType(enumType);
-    ensureJsonCacheInitialized(enumType);
-    WireSafeEnum<?> cached = JSON_LOOKUP_CACHE.get(enumType).get(jsonValue);
+    Map<String, WireSafeEnum<?>> jsonLookupMap = JSON_LOOKUP_CACHE.get(
+      enumType
+    );
+    if (jsonLookupMap == null) {
+      ensureJsonCacheInitialized(enumType);
+      jsonLookupMap = JSON_LOOKUP_CACHE.get(enumType);
+    }
+    WireSafeEnum<?> cached = jsonLookupMap.get(jsonValue);
     if (cached == null) {
       return fallback.apply(enumType, jsonValue);
     } else {
@@ -159,7 +175,12 @@ public final class WireSafeEnum<T extends Enum<T>> {
       .get(enumType)
       .values();
     String validMembers = Arrays.toString(
-      wiresafeEnumTypes.stream().map(WireSafeEnum::asString).distinct().sorted().toArray()
+      wiresafeEnumTypes
+        .stream()
+        .map(WireSafeEnum::asString)
+        .distinct()
+        .sorted()
+        .toArray()
     );
 
     String message = String.format(
@@ -209,7 +230,10 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   private static <T> T checkNotNull(T o, String name) {
-    return Objects.requireNonNull(o, name + " must not be null");
+    if (o == null) {
+      throw new NullPointerException(name + " must not be null");
+    }
+    return o;
   }
 
   private static <T extends Enum<T>> void ensureEnumCacheInitialized(Class<T> enumType) {
@@ -241,9 +265,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     );
 
     Map<T, WireSafeEnum<?>> enumMap = new EnumMap<>(enumType);
-    Map<String, WireSafeEnum<?>> jsonMap = new HashMap<>(
-      mapCapacity(enumConstants.length)
-    );
+    Map<String, WireSafeEnum<?>> jsonMap = new HashMap<>(mapCapacity(enumConstants.length));
 
     for (int i = 0; i < enumConstants.length; i++) {
       T enumValue = enumConstants[i];
@@ -264,7 +286,11 @@ public final class WireSafeEnum<T extends Enum<T>> {
         throw new IllegalStateException(message);
       }
 
-      WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(enumType, jsonValue, enumValue);
+      WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(
+        enumType,
+        jsonValue,
+        enumValue
+      );
       enumMap.put(enumValue, wireSafeEnum);
       /*
       If the deserialized value doesn't match, then this enum
@@ -276,7 +302,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     }
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);
-    JSON_LOOKUP_CACHE.put(enumType, jsonMap);
+    JSON_LOOKUP_CACHE.put(enumType, PerfectMap.of(jsonMap).orElse(jsonMap));
   }
 
   private static <T extends Enum<T>> Class<T> getRealEnumType(Class<T> enumType) {
@@ -308,7 +334,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
     if (elements < 3) {
       return elements + 1;
     } else {
-      return (int) ((float) elements / 0.75F + 1.0F);
+      return (int) ((float) elements / 0.50F + 1.0F);
     }
   }
 
@@ -318,7 +344,10 @@ public final class WireSafeEnum<T extends Enum<T>> {
     private static final Map<JavaType, JsonDeserializer<WireSafeEnum<?>>> DESERIALIZER_CACHE = new ConcurrentHashMap<>();
 
     @Override
-    public WireSafeEnum<?> deserialize(JsonParser p, DeserializationContext ctxt)
+    public WireSafeEnum<?> deserialize(
+      JsonParser p,
+      DeserializationContext ctxt
+    )
       throws IOException {
       throw ctxt.mappingException("Expected createContextual to be called");
     }
@@ -342,7 +371,10 @@ public final class WireSafeEnum<T extends Enum<T>> {
       return new JsonDeserializer<WireSafeEnum<?>>() {
 
         @Override
-        public WireSafeEnum<T> deserialize(JsonParser p, DeserializationContext ctxt)
+        public WireSafeEnum<T> deserialize(
+          JsonParser p,
+          DeserializationContext ctxt
+        )
           throws IOException {
           if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
             return null;
@@ -422,10 +454,15 @@ public final class WireSafeEnum<T extends Enum<T>> {
     DeserializationContext ctxt
   )
     throws JsonMappingException {
-    if (contextualType == null || !contextualType.hasRawClass(WireSafeEnum.class)) {
+    if (
+      contextualType == null ||
+      !contextualType.hasRawClass(WireSafeEnum.class)
+    ) {
       throw ctxt.mappingException("Can not handle contextualType: " + contextualType);
     } else {
-      JavaType[] typeParameters = contextualType.findTypeParameters(WireSafeEnum.class);
+      JavaType[] typeParameters = contextualType.findTypeParameters(
+        WireSafeEnum.class
+      );
       if (typeParameters.length != 1) {
         throw ctxt.mappingException("Can not discover enum type for: " + contextualType);
       } else if (!typeParameters[0].isEnumType()) {
@@ -471,6 +508,56 @@ public final class WireSafeEnum<T extends Enum<T>> {
       return Optional.ofNullable((T) deserializer.deserialize(p, ctxt));
     } catch (Exception e) {
       return Optional.empty();
+    }
+  }
+
+  // Lock behavior is inspired by CopyOnWriteArrayList...
+  // reads aren't locked because they never get a reference to a mutating
+  // object
+  private static class CopyOnWriteMap<K, V> extends ForwardingMap<K, V> {
+    private final Object lock = new Object();
+    private transient volatile Map<K, V> current = Collections.emptyMap();
+
+    @Override
+    protected Map<K, V> delegate() {
+      return current;
+    }
+
+    @CheckForNull
+    @Override
+    public V put(K key, V value) {
+      synchronized (lock) {
+        V oldValue = current.get(key);
+        this.current =
+          ImmutableMap
+            .<K, V>builder()
+            .putAll(this.current)
+            .put(key, value)
+            .buildKeepingLast();
+        return oldValue;
+      }
+    }
+
+    @CheckForNull
+    @Override
+    public V get(@CheckForNull Object key) {
+      return current.get(key);
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> map) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clear() {
+      throw new UnsupportedOperationException();
+    }
+
+    @CheckForNull
+    @Override
+    public V remove(@CheckForNull Object key) {
+      throw new UnsupportedOperationException();
     }
   }
 }
