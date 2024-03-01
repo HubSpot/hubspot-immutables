@@ -159,13 +159,18 @@ public class ImmutablesTest {
   public void itParsesAModifiable() throws IOException {
     String inputJson = "{\"names\": [\"Bill\", \"Bob\"], \"description\": \"Foo\"}";
     assertThatThrownBy(() -> objectMapper.readValue(inputJson, ImmutableWithModifiable.class))
-        .hasMessageStartingWith("Instantiation of [simple type, class com.hubspot.immutables.model.ImmutableWithModifiable] value failed")
+        .satisfiesAnyOf(
+            t -> assertThat(t).hasMessageStartingWith("Instantiation of [simple type, class com.hubspot.immutables.model.ImmutableWithModifiable] value failed"),
+            t -> assertThat(t).hasMessageStartingWith("Cannot construct instance of `com.hubspot.immutables.model.ImmutableWithModifiable`")
+        )
         .hasMessageContaining("Cannot build ImmutableWithModifiable, some of required attributes are not set [id]")
         .isInstanceOf(JsonMappingException.class);
     ModifiableImmutableWithModifiable modifiable = objectMapper.readValue(inputJson, ModifiableImmutableWithModifiable.class);
     assertThatThrownBy(modifiable::toImmutable)
-        .hasMessage("ImmutableWithModifiable in not initialized, some of the required attributes are not set [id]")
-        .isInstanceOf(IllegalStateException.class);
+      .hasMessage(
+        "ImmutableWithModifiable is not initialized, some of the required attributes are not set [id]"
+      )
+      .isInstanceOf(IllegalStateException.class);
     ImmutableWithModifiable exampleImmutable = modifiable.setId(1).toImmutable();
     assertThat(exampleImmutable.getId()).isEqualTo(1);
     assertThat(exampleImmutable.getDescription()).isEqualTo("Foo");
@@ -176,7 +181,10 @@ public class ImmutablesTest {
   public void itParsesEggPattern() throws IOException {
     String inputJson = "{\"name\": \"EggTest\"}";
     assertThatThrownBy(() -> objectMapper.readValue(inputJson, Foo.class))
-        .hasMessageStartingWith("Instantiation of [simple type, class com.hubspot.immutables.model.Foo] value failed")
+        .satisfiesAnyOf(
+            t -> assertThat(t).hasMessageStartingWith("Instantiation of [simple type, class com.hubspot.immutables.model.Foo] value failed"),
+            t -> assertThat(t).hasMessageStartingWith("Cannot construct instance of `com.hubspot.immutables.model.Foo`")
+        )
         .hasMessageContaining("Cannot build Foo, some of required attributes are not set [id]")
         .isInstanceOf(JsonMappingException.class);
 

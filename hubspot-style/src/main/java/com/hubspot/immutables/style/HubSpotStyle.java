@@ -4,13 +4,15 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
 import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.hubspot.immutables.validation.InvalidImmutableStateException;
 
+/**
+ * Consider using {@link HubSpotImmutableStyle} instead.
+ */
 @Target({ ElementType.PACKAGE, ElementType.TYPE})
 @Retention(RetentionPolicy.CLASS) // Make it class retention for incremental compilation
 @JsonSerialize
@@ -23,5 +25,7 @@ import com.hubspot.immutables.validation.InvalidImmutableStateException;
     optionalAcceptNullable = true, // allow for an Optional<T> to have a setter that takes a null value of T
     forceJacksonPropertyNames = false, // otherwise we can't use RosettaNamingStrategies
     visibility = ImplementationVisibility.SAME, // Generated class will have the same visibility as the abstract class/interface)
-    jdkOnly = true)  // For Guava 18+, this stops MoreObjects from being used in toString and ImmutableHashMap.Builder from being used for building map fields (among other effects).
+    jdkOnly = true, // For Guava 18+, this stops MoreObjects from being used in toString and ImmutableHashMap.Builder from being used for building map fields (among other effects).
+    passAnnotations = ImmutableInherited.class
+)
 public @interface HubSpotStyle {}

@@ -104,6 +104,11 @@ public class ImmutableListEncoding<T> {
       builder = null;
     }
 
+    @Encoding.IsInit
+    boolean isSet() {
+      return list != null || builder != null;
+    }
+
     @Encoding.Build
     ImmutableList<T> build() {
       if (builder != null) {
