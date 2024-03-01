@@ -18,6 +18,7 @@
     <module>hubspot-style</module>
     <module>immutable-collection-encodings</module>
     <module>immutable-collection-encodings-test</module>
+    <module>hubspot-style-test</module>
   </modules>
 
   <properties>

@@ -10,6 +10,10 @@
 
   <artifactId>hubspot-style</artifactId>
 
+  <properties>
+    <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -39,7 +43,10 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>org.immutables</groupId>
+      <artifactId>encode</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.immutables</groupId>
       <artifactId>value</artifactId>
