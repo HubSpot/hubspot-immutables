@@ -1,10 +1,8 @@
 package com.hubspot.immutables;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.Test;
-
 import com.hubspot.immutables.utils.WireSafeEnum;
+import org.junit.Test;
 
 public class WireSafeEncodingsTest {
 
@@ -12,20 +10,20 @@ public class WireSafeEncodingsTest {
   public void itImplementsBuilderSetProperly() {
     TestImmutable one = TestImmutable.builder()
         .setString("value")
-        .setEnum(TestEnum.ONE)
-        .setOtherEnum(TestEnum.ONE)
+        .setFirstEnum(TestEnum.ONE)
+        .setSecondEnum(TestEnum.ONE)
         .build();
 
     TestImmutable two = TestImmutable.builder()
         .setString("value")
-        .setEnum(WireSafeEnum.of(TestEnum.TWO))
-        .setOtherEnum(WireSafeEnum.of(TestEnum.TWO))
+        .setFirstEnum(WireSafeEnum.of(TestEnum.TWO))
+        .setSecondEnum(WireSafeEnum.of(TestEnum.TWO))
         .build();
 
-    assertThat(one.getEnum()).isEqualTo(WireSafeEnum.of(TestEnum.ONE));
-    assertThat(one.getOtherEnum()).isEqualTo(WireSafeEnum.of(TestEnum.ONE));
-    assertThat(two.getEnum()).isEqualTo(WireSafeEnum.of(TestEnum.TWO));
-    assertThat(two.getOtherEnum()).isEqualTo(WireSafeEnum.of(TestEnum.TWO));
+    assertThat(one.getFirstEnum()).isEqualTo(WireSafeEnum.of(TestEnum.ONE));
+    assertThat(one.getSecondEnum()).isEqualTo(WireSafeEnum.of(TestEnum.ONE));
+    assertThat(two.getFirstEnum()).isEqualTo(WireSafeEnum.of(TestEnum.TWO));
+    assertThat(two.getSecondEnum()).isEqualTo(WireSafeEnum.of(TestEnum.TWO));
 
     assertThat(one).isNotEqualTo(two);
   }
@@ -34,14 +32,14 @@ public class WireSafeEncodingsTest {
   public void itImplementsWithProperly() {
     TestImmutable one = TestImmutable.builder()
         .setString("value")
-        .setEnum(TestEnum.ONE)
-        .setOtherEnum(TestEnum.ONE)
+        .setFirstEnum(TestEnum.ONE)
+        .setSecondEnum(TestEnum.ONE)
         .build();
 
-    assertThat(one.withEnum(TestEnum.TWO).getEnum())
+    assertThat(one.withFirstEnum(TestEnum.TWO).getFirstEnum())
         .isEqualTo(WireSafeEnum.of(TestEnum.TWO));
 
-    assertThat(one.withOtherEnum(TestEnum.TWO).getOtherEnum())
+    assertThat(one.withSecondEnum(TestEnum.TWO).getSecondEnum())
         .isEqualTo(WireSafeEnum.of(TestEnum.TWO));
   }
 
@@ -49,18 +47,28 @@ public class WireSafeEncodingsTest {
   public void itImplementsFromProperly() {
     TestImmutable one = TestImmutable.builder()
         .setString("value")
-        .setEnum(TestEnum.ONE)
-        .setOtherEnum(TestEnum.TWO)
+        .setFirstEnum(TestEnum.ONE)
+        .setSecondEnum(TestEnum.TWO)
         .build();
 
     TestImmutable two = TestImmutable.builder()
         .from(one)
-        .setOtherEnum(TestEnum.THREE)
+        .setSecondEnum(TestEnum.THREE)
         .build();
 
-    assertThat(two.getEnum()).isEqualTo(WireSafeEnum.of(TestEnum.ONE));
-    assertThat(two.getOtherEnum()).isEqualTo(WireSafeEnum.of(TestEnum.THREE));
+    assertThat(two.getFirstEnum()).isEqualTo(WireSafeEnum.of(TestEnum.ONE));
+    assertThat(two.getSecondEnum()).isEqualTo(WireSafeEnum.of(TestEnum.THREE));
 
     assertThat(one).isNotEqualTo(two);
+  }
+
+  @Test
+  public void itHandlesDefault() {
+    TestImmutable one = TestImmutable.builder()
+        .setString("value")
+        .setSecondEnum(TestEnum.TWO)
+        .build();
+
+    assertThat(one.getFirstEnum()).isEqualTo(WireSafeEnum.of(TestEnum.THREE));
   }
 }

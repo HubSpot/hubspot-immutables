@@ -1,10 +1,9 @@
 package com.hubspot.immutables.encoding;
 
+import com.hubspot.immutables.utils.WireSafeEnum;
 import org.immutables.encode.Encoding;
 import org.immutables.encode.Encoding.Naming;
 import org.immutables.encode.Encoding.StandardNaming;
-
-import com.hubspot.immutables.utils.WireSafeEnum;
 
 @Encoding
 class WireSafeEnumEncoding<T extends Enum<T>> {
@@ -46,6 +45,11 @@ class WireSafeEnumEncoding<T extends Enum<T>> {
     @Naming(standard = StandardNaming.INIT)
     void setWireSafeValue(WireSafeEnum<T> value) {
       fieldValue = value;
+    }
+
+    @Encoding.IsInit
+    boolean getIsSet() {
+      return fieldValue != null;
     }
 
     @Encoding.Build
