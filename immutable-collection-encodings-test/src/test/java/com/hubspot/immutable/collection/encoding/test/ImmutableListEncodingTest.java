@@ -2,14 +2,12 @@ package com.hubspot.immutable.collection.encoding.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.junit.Test;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.List;
+import org.junit.Test;
 
 public class ImmutableListEncodingTest {
 
@@ -17,9 +15,7 @@ public class ImmutableListEncodingTest {
   public void itDoesNotCopyInputImmutableList() {
     List<String> strings = ImmutableList.of("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .setStrings(strings)
-        .build();
+    TestList test = TestList.builder().setStrings(strings).build();
 
     assertThat(test.getStrings()).isSameAs(strings);
   }
@@ -28,9 +24,7 @@ public class ImmutableListEncodingTest {
   public void itDoesNotCopyInputImmutableSet() {
     ImmutableSet<String> strings = ImmutableSet.of("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .setStrings(strings)
-        .build();
+    TestList test = TestList.builder().setStrings(strings).build();
 
     assertThat(test.getStrings()).isSameAs(strings.asList());
   }
@@ -39,9 +33,7 @@ public class ImmutableListEncodingTest {
   public void itDoesNotCopyAddedImmutableList() {
     List<String> strings = ImmutableList.of("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .addAllStrings(strings)
-        .build();
+    TestList test = TestList.builder().addAllStrings(strings).build();
 
     assertThat(test.getStrings()).isSameAs(strings);
   }
@@ -50,9 +42,7 @@ public class ImmutableListEncodingTest {
   public void itDoesCopyList() {
     List<String> strings = Lists.newArrayList("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .setStrings(strings)
-        .build();
+    TestList test = TestList.builder().setStrings(strings).build();
 
     assertThat(test.getStrings()).isInstanceOf(ImmutableList.class);
     assertThat(test.getStrings()).isNotSameAs(strings);
@@ -62,10 +52,7 @@ public class ImmutableListEncodingTest {
   public void itCanExpandInputImmutableList() {
     List<String> strings = ImmutableList.of("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .setStrings(strings)
-        .addStrings("another")
-        .build();
+    TestList test = TestList.builder().setStrings(strings).addStrings("another").build();
 
     assertThat(test.getStrings()).containsExactly("testing", "this is a test", "another");
   }
@@ -74,9 +61,7 @@ public class ImmutableListEncodingTest {
   public void itCanExpandFromEmpty() {
     List<String> strings = Lists.newArrayList("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .addAllStrings(strings)
-        .build();
+    TestList test = TestList.builder().addAllStrings(strings).build();
 
     assertThat(test.getStrings()).containsExactly("testing", "this is a test");
   }
@@ -85,27 +70,21 @@ public class ImmutableListEncodingTest {
   public void itCanAcceptIterable() {
     Iterable<String> strings = Lists.newArrayList("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .addAllStrings(strings)
-        .build();
+    TestList test = TestList.builder().addAllStrings(strings).build();
 
     assertThat(test.getStrings()).containsExactly("testing", "this is a test");
   }
 
   @Test
   public void itCanAcceptVarargs() {
-    TestList test = TestList.builder()
-        .addStrings("testing", "this is a test")
-        .build();
+    TestList test = TestList.builder().addStrings("testing", "this is a test").build();
 
     assertThat(test.getStrings()).containsExactly("testing", "this is a test");
   }
 
   @Test
   public void itCanAcceptVarargsWith() {
-    TestList test = TestList.builder()
-        .build()
-        .withStrings("testing", "this is a test");
+    TestList test = TestList.builder().build().withStrings("testing", "this is a test");
 
     assertThat(test.getStrings()).containsExactly("testing", "this is a test");
   }
@@ -115,22 +94,21 @@ public class ImmutableListEncodingTest {
     List<String> strings = ImmutableList.of("testing", "this is a test");
     List<String> moreStrings = ImmutableList.of("more1", "more2");
 
-    TestList test = TestList.builder()
-        .setStrings(strings)
-        .addAllStrings(moreStrings)
-        .build();
+    TestList test = TestList
+      .builder()
+      .setStrings(strings)
+      .addAllStrings(moreStrings)
+      .build();
 
-    assertThat(test.getStrings()).containsExactly("testing", "this is a test", "more1", "more2");
+    assertThat(test.getStrings())
+      .containsExactly("testing", "this is a test", "more1", "more2");
   }
-
 
   @Test
   public void itDoesNotCopyInputImmutableListUsingWith() {
     List<String> strings = ImmutableList.of("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .build()
-        .withStrings(strings);
+    TestList test = TestList.builder().build().withStrings(strings);
 
     assertThat(test.getStrings()).isSameAs(strings);
   }
@@ -139,9 +117,7 @@ public class ImmutableListEncodingTest {
   public void itDoesNotCopyInputListUsingWith() {
     List<String> strings = Lists.newArrayList("testing", "this is a test");
 
-    TestList test = TestList.builder()
-        .build()
-        .withStrings(strings);
+    TestList test = TestList.builder().build().withStrings(strings);
 
     assertThat(test.getStrings()).isInstanceOf(ImmutableList.class);
     assertThat(test.getStrings()).containsExactlyElementsOf(strings);
@@ -153,5 +129,4 @@ public class ImmutableListEncodingTest {
 
     assertThat(test.getStrings()).containsExactly("testing");
   }
-
 }

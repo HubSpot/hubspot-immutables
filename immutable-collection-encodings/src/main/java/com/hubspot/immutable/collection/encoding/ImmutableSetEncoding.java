@@ -1,16 +1,14 @@
 package com.hubspot.immutable.collection.encoding;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-import org.immutables.encode.Encoding;
-import org.immutables.encode.Encoding.Naming;
-import org.immutables.encode.Encoding.StandardNaming;
-
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import org.immutables.encode.Encoding;
+import org.immutables.encode.Encoding.Naming;
+import org.immutables.encode.Encoding.StandardNaming;
 
 @Encoding
 public class ImmutableSetEncoding<T> {
@@ -28,13 +26,11 @@ public class ImmutableSetEncoding<T> {
     return field;
   }
 
-
   @Encoding.Copy
   @Naming(standard = StandardNaming.WITH)
   ImmutableSet<T> withCollectionVarargs(T... elements) {
     return ImmutableSet.copyOf(elements);
   }
-
 
   @Encoding.Copy
   @Naming(standard = StandardNaming.WITH)
@@ -60,7 +56,9 @@ public class ImmutableSetEncoding<T> {
       if (builder != null) {
         builder.add(element);
       } else if (set != null) {
-        builder = ImmutableSet.<T>builderWithExpectedSize(set.size() + 1)
+        builder =
+          ImmutableSet
+            .<T>builderWithExpectedSize(set.size() + 1)
             .addAll(set)
             .add(element);
 
@@ -82,7 +80,9 @@ public class ImmutableSetEncoding<T> {
           additionalSize = ((Collection<? extends T>) elements).size();
         }
 
-        builder = ImmutableSet.<T>builderWithExpectedSize(set.size() + additionalSize)
+        builder =
+          ImmutableSet
+            .<T>builderWithExpectedSize(set.size() + additionalSize)
             .addAll(set)
             .addAll(elements);
 
@@ -91,7 +91,10 @@ public class ImmutableSetEncoding<T> {
         if (elements instanceof ImmutableCollection) {
           set(elements);
         } else if (elements instanceof Collection) {
-          builder = ImmutableSet.builderWithExpectedSize(((Collection<? extends T>) elements).size());
+          builder =
+            ImmutableSet.builderWithExpectedSize(
+              ((Collection<? extends T>) elements).size()
+            );
           builder.addAll(elements);
         } else {
           builder = ImmutableSet.builder();

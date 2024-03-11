@@ -1,12 +1,10 @@
 package com.hubspot.immutable.collection.encoding;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-
 import org.immutables.encode.Encoding;
 import org.immutables.encode.Encoding.Naming;
 import org.immutables.encode.Encoding.StandardNaming;
-
-import com.google.common.collect.ImmutableMap;
 
 @Encoding
 public class ImmutableMapEncoding<K, V> {
@@ -48,7 +46,9 @@ public class ImmutableMapEncoding<K, V> {
       if (builder != null) {
         builder.put(key, value);
       } else if (map != null) {
-        builder = ImmutableMap.<K, V>builderWithExpectedSize(map.size() + 1)
+        builder =
+          ImmutableMap
+            .<K, V>builderWithExpectedSize(map.size() + 1)
             .putAll(map)
             .put(key, value);
 
@@ -65,7 +65,9 @@ public class ImmutableMapEncoding<K, V> {
       if (builder != null) {
         builder.put(entry);
       } else if (map != null) {
-        builder = ImmutableMap.<K, V>builderWithExpectedSize(map.size() + 1)
+        builder =
+          ImmutableMap
+            .<K, V>builderWithExpectedSize(map.size() + 1)
             .putAll(map)
             .put(entry);
 
@@ -82,7 +84,9 @@ public class ImmutableMapEncoding<K, V> {
       if (builder != null) {
         builder.putAll(elements);
       } else if (map != null) {
-        builder = ImmutableMap.<K, V>builderWithExpectedSize(map.size() + elements.size())
+        builder =
+          ImmutableMap
+            .<K, V>builderWithExpectedSize(map.size() + elements.size())
             .putAll(map)
             .putAll(elements);
 
@@ -120,6 +124,5 @@ public class ImmutableMapEncoding<K, V> {
         return ImmutableMap.of();
       }
     }
-
   }
 }
