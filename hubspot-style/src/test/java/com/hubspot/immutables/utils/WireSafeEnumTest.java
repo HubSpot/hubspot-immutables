@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -38,6 +39,13 @@ public class WireSafeEnumTest {
     public String reversedName() {
       return new StringBuilder(name()).reverse().toString();
     }
+  }
+
+  public enum AliasJsonEnum {
+    @JsonAlias("abc")
+    ABC,
+    @JsonAlias("def")
+    DEF,
   }
 
   public enum NullJsonEnum {
@@ -298,6 +306,42 @@ public class WireSafeEnumTest {
     assertThat(wrapper.enumType()).isEqualTo(CollidingJsonEnumWithCreator.class);
     assertThat(wrapper.asString()).isEqualTo("123");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(CollidingJsonEnumWithCreator.DEF));
+  }
+
+  @Test
+  public void itBuildsFromJsonAlias() {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "abc"
+    );
+
+    assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+    assertThat(wrapper.asString()).isEqualTo("abc");
+    assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
+  }
+
+  @Test
+  public void itBuildsFromNameWhenJsonAliasIsAvalable() {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "ABC"
+    );
+
+    assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+    assertThat(wrapper.asString()).isEqualTo("ABC");
+    assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
+  }
+
+  @Test
+  public void itBuildsFromUnknownStringWhenJsonAliasIsAvalable() {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "tuv"
+    );
+
+    assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+    assertThat(wrapper.asString()).isEqualTo("tuv");
+    assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
   }
 
   @Test
