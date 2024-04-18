@@ -316,7 +316,7 @@ public class WireSafeEnumTest {
     );
 
     assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
-    assertThat(wrapper.asString()).isEqualTo("abc");
+    assertThat(wrapper.asString()).isEqualTo("ABC");
     assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
   }
 
@@ -469,13 +469,13 @@ public class WireSafeEnumTest {
   }
 
   @Test
-  public void itSerializesAliasAsAlias() throws IOException {
+  public void itSerializesAliasAsConstantName() throws IOException {
     WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
       AliasJsonEnum.class,
       "abc"
     );
 
-    writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"abc\""));
+    writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"ABC\""));
   }
 
   @Test
@@ -483,7 +483,7 @@ public class WireSafeEnumTest {
     readFromJson("\"abc\"", new TypeReference<WireSafeEnum<AliasJsonEnum>>() {})
       .forEach(wrapper -> {
         assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
-        assertThat(wrapper.asString()).isEqualTo("abc");
+        assertThat(wrapper.asString()).isEqualTo("ABC");
         assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
       });
   }
