@@ -469,6 +469,26 @@ public class WireSafeEnumTest {
   }
 
   @Test
+  public void itSerializesAliasAsAlias() throws IOException {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "abc"
+    );
+
+    writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"abc\""));
+  }
+
+  @Test
+  public void itDeserializesFromKnownAliasString() throws IOException {
+    readFromJson("\"abc\"", new TypeReference<WireSafeEnum<AliasJsonEnum>>() {})
+      .forEach(wrapper -> {
+        assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+        assertThat(wrapper.asString()).isEqualTo("abc");
+        assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
+      });
+  }
+
+  @Test
   public void itDeserializesFromKnownString() throws IOException {
     readFromJson("\"SOURCE\"", new TypeReference<WireSafeEnum<RetentionPolicy>>() {})
       .forEach(wrapper -> {
