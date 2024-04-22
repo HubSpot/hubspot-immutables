@@ -279,7 +279,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
       }
 
       for (String alias : getJsonAliases(enumType, enumValue)) {
-        jsonMap.putIfAbsent(alias, wireSafeEnum);
+        jsonMap.computeIfAbsent(alias, jv -> new WireSafeEnum<>(enumType, jv, enumValue));
       }
     }
 
