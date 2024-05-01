@@ -11,6 +11,7 @@
   <artifactId>hubspot-style</artifactId>
 
   <properties>
+    <basepom.check.phase-spotbugs>never</basepom.check.phase-spotbugs>
     <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>
   </properties>
 
