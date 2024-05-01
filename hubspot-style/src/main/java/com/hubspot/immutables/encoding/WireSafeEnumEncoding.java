@@ -32,6 +32,7 @@ class WireSafeEnumEncoding<T extends Enum<T>> {
 
   @Encoding.Builder
   static class Builder<T extends Enum<T>> {
+
     private WireSafeEnum<T> fieldValue;
 
     @Encoding.Init
