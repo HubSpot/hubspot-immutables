@@ -1,6 +1,7 @@
 package com.hubspot.immutables.style;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hubspot.immutables.encoding.WireSafeEnumEncodingEnabled;
 import com.hubspot.immutables.validation.InvalidImmutableStateException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,5 +25,6 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
   jdkOnly = true, // For Guava 18+, this stops MoreObjects from being used in toString and ImmutableHashMap.Builder from being used for building map fields (among other effects).
   passAnnotations = ImmutableInherited.class
 )
+@WireSafeEnumEncodingEnabled
 public @interface HubSpotModifiableStyle {
 }
