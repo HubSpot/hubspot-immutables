@@ -2,7 +2,6 @@ package com.hubspot.immutable.collection.encoding;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Collection;
 import java.util.List;
 import org.immutables.encode.Encoding;
@@ -13,7 +12,6 @@ import org.immutables.encode.Encoding.StandardNaming;
 public class ImmutableListEncoding<T> {
 
   @Encoding.Impl
-  @SuppressFBWarnings("UWF_NULL_FIELD")
   private ImmutableList<T> field = null;
 
   @Encoding.Expose
