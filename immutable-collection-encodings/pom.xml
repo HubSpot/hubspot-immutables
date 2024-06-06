@@ -11,7 +11,7 @@
   <artifactId>immutable-collection-encodings</artifactId>
 
   <properties>
-    <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>
+    <basepom.check.skip-spotbugs>true</basepom.check.skip-spotbugs>
   </properties>
 
   <dependencies>
