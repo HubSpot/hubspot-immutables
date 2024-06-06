@@ -1,6 +1,7 @@
 package com.hubspot.immutable.collection.encoding;
 
 import com.google.common.collect.ImmutableMap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Map;
 import org.immutables.encode.Encoding;
 import org.immutables.encode.Encoding.Naming;
@@ -10,6 +11,7 @@ import org.immutables.encode.Encoding.StandardNaming;
 public class ImmutableMapEncoding<K, V> {
 
   @Encoding.Impl
+  @SuppressFBWarnings("UWF_NULL_FIELD")
   private ImmutableMap<K, V> field = null;
 
   @Encoding.Expose

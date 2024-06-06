@@ -2,6 +2,7 @@ package com.hubspot.immutable.collection.encoding;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Collection;
 import java.util.Set;
 import org.immutables.encode.Encoding;
@@ -12,6 +13,7 @@ import org.immutables.encode.Encoding.StandardNaming;
 public class ImmutableSetEncoding<T> {
 
   @Encoding.Impl
+  @SuppressFBWarnings("UWF_NULL_FIELD")
   private ImmutableSet<T> field = null;
 
   @Encoding.Expose
