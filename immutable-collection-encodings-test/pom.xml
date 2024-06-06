@@ -20,7 +20,15 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-guava</artifactId>
+    </dependency>
 
+    <dependency>
+      <groupId>com.hubspot.immutables</groupId>
+      <artifactId>hubspot-style</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutable-collection-encodings</artifactId>

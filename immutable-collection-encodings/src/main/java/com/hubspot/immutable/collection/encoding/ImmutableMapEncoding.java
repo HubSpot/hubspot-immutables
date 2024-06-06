@@ -10,7 +10,7 @@ import org.immutables.encode.Encoding.StandardNaming;
 public class ImmutableMapEncoding<K, V> {
 
   @Encoding.Impl
-  private ImmutableMap<K, V> field = ImmutableMap.of();
+  private ImmutableMap<K, V> field = null;
 
   @Encoding.Expose
   ImmutableMap<K, V> getImmutableMap() {
