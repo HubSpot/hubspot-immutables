@@ -39,10 +39,6 @@
 
     <dependency>
       <groupId>com.hubspot.immutables</groupId>
-      <artifactId>hubspot-style</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.hubspot.immutables</groupId>
       <artifactId>immutable-collection-encodings</artifactId>
       <scope>provided</scope>
     </dependency>
