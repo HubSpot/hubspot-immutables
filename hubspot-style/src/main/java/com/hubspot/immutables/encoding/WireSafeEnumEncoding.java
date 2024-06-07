@@ -5,6 +5,7 @@ import org.immutables.encode.Encoding;
 import org.immutables.encode.Encoding.Naming;
 import org.immutables.encode.Encoding.StandardNaming;
 
+// Enabling this encoding may cause issues in some builds see https://github.com/HubSpot/hubspot-immutables/pull/54
 @Encoding
 class WireSafeEnumEncoding<T extends Enum<T>> {
 
