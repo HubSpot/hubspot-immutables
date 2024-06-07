@@ -12,7 +12,7 @@ import org.immutables.encode.Encoding.StandardNaming;
 public class ImmutableListEncoding<T> {
 
   @Encoding.Impl
-  private ImmutableList<T> field = ImmutableList.of();
+  private ImmutableList<T> field = null;
 
   @Encoding.Expose
   ImmutableList<T> getImmutableList() {

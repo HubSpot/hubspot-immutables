@@ -1,10 +1,8 @@
 package com.hubspot.immutable.collection.encoding;
 
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import org.immutables.encode.Encoding;
 import org.immutables.encode.Encoding.Naming;
@@ -14,7 +12,7 @@ import org.immutables.encode.Encoding.StandardNaming;
 public class ImmutableSetEncoding<T> {
 
   @Encoding.Impl
-  private ImmutableSet<T> field = ImmutableSet.of();
+  private ImmutableSet<T> field = null;
 
   @Encoding.Expose
   ImmutableSet<T> getImmutableSet() {

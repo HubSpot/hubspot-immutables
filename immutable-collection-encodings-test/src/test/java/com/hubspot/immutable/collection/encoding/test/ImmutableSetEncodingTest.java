@@ -2,6 +2,9 @@ package com.hubspot.immutable.collection.encoding.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -10,6 +13,10 @@ import java.util.Set;
 import org.junit.Test;
 
 public class ImmutableSetEncodingTest {
+
+  public static final String INPUT_JSON = "{}";
+  public static final ObjectMapper MAPPER = new ObjectMapper()
+    .registerModule(new GuavaModule());
 
   @Test
   public void itDoesNotCopyInputImmutableSet() {
@@ -120,5 +127,11 @@ public class ImmutableSetEncodingTest {
     TestSet test = TestSet.of(Collections.singleton("testing"));
 
     assertThat(test.getStrings()).containsExactly("testing");
+  }
+
+  @Test
+  public void itCanReadDefaultFromJsonMissingValue() throws JsonProcessingException {
+    TestSetWithDefault test = MAPPER.readValue(INPUT_JSON, TestSetWithDefault.class);
+    assertThat(test.getInts()).containsExactly(1);
   }
 }

@@ -1,5 +1,6 @@
 package com.hubspot.immutable.collection.encoding.test;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.hubspot.immutable.collection.encoding.ImmutableListEncodingEnabled;
 import com.hubspot.immutable.collection.encoding.ImmutableMapEncodingEnabled;
 import com.hubspot.immutable.collection.encoding.ImmutableSetEncodingEnabled;
@@ -12,12 +13,15 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
 
 @Target({ ElementType.PACKAGE, ElementType.TYPE })
 @Retention(RetentionPolicy.CLASS) // Make it class retention for incremental compilation
+@JsonSerialize
 @Value.Style(
   get = { "is*", "get*" }, // Detect 'get' and 'is' prefixes in accessor methods
   init = "set*", // Builder initialization methods will have 'set' prefix
   typeAbstract = { "Abstract*", "*IF" }, // 'Abstract' prefix, and 'IF' suffix, will be detected and trimmed
   typeImmutable = "*", // No prefix or suffix for generated immutable type
-  visibility = ImplementationVisibility.SAME
+  visibility = ImplementationVisibility.SAME,
+  forceJacksonPropertyNames = false, // otherwise we can't use RosettaNamingStrategies
+  jacksonIntegration = true
 )
 @ImmutableMapEncodingEnabled
 @ImmutableSetEncodingEnabled
