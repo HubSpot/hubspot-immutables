@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.hubspot.immutable.collection.encoding.ImmutableListEncodingEnabled;
 import com.hubspot.immutable.collection.encoding.ImmutableMapEncodingEnabled;
 import com.hubspot.immutable.collection.encoding.ImmutableSetEncodingEnabled;
-import com.hubspot.immutables.encoding.WireSafeEnumEncodingEnabled;
 import com.hubspot.immutables.validation.InvalidImmutableStateException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -40,6 +39,5 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
 @ImmutableSetEncodingEnabled
 @ImmutableListEncodingEnabled
 @ImmutableMapEncodingEnabled
-@WireSafeEnumEncodingEnabled
 public @interface HubSpotImmutableStyle {
 }
