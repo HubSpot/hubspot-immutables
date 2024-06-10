@@ -62,7 +62,6 @@
     <dependency>
       <groupId>com.hubspot.rosetta</groupId>
       <artifactId>RosettaAnnotations</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.hubspot.rosetta</groupId>
