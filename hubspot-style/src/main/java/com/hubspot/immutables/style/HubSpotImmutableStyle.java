@@ -5,6 +5,7 @@ import com.hubspot.immutable.collection.encoding.ImmutableListEncodingEnabled;
 import com.hubspot.immutable.collection.encoding.ImmutableMapEncodingEnabled;
 import com.hubspot.immutable.collection.encoding.ImmutableSetEncodingEnabled;
 import com.hubspot.immutables.validation.InvalidImmutableStateException;
+import com.hubspot.rosetta.annotations.RosettaAnnotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -34,7 +35,7 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
   optionalAcceptNullable = true, // allow for an Optional<T> to have a setter that takes a null value of T
   forceJacksonPropertyNames = false, // otherwise we can't use RosettaNamingStrategies
   visibility = ImplementationVisibility.SAME, // Generated class will have the same visibility as the abstract class/interface)
-  passAnnotations = ImmutableInherited.class
+  passAnnotations = { ImmutableInherited.class, RosettaAnnotation.class }
 )
 @ImmutableSetEncodingEnabled
 @ImmutableListEncodingEnabled

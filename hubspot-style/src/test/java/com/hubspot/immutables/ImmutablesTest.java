@@ -74,7 +74,7 @@ public class ImmutablesTest {
   @Test
   public void itDeserializesJson() throws IOException {
     String inputJson =
-      "{\"id\":1,\"hubSpotId\":12,\"name\":\"test\",\"somethingWithLongName\":\"a long thing\",\"blueSprocket\":true}";
+      "{\"id\":1,\"hubSpotId\":12,\"name\":\"test\",\"somethingWithLongName\":\"a long thing\",\"blueSprocket\":true,\"hubspotCustomName\":13}";
     RosettaSprocket rosettaSprocket = objectMapper.readValue(
       inputJson,
       RosettaSprocket.class
@@ -84,6 +84,7 @@ public class ImmutablesTest {
     assertThat(rosettaSprocket.getName()).isEqualTo("test");
     assertThat(rosettaSprocket.getSomethingWithLongName()).isEqualTo("a long thing");
     assertThat(rosettaSprocket.isBlueSprocket()).isTrue();
+    assertThat(rosettaSprocket.getCustomName()).isEqualTo(13);
 
     JsonNode output = objectMapper.valueToTree(rosettaSprocket);
     JsonNode original = objectMapper.readTree(inputJson);
@@ -93,7 +94,7 @@ public class ImmutablesTest {
   @Test
   public void itDeserializesRosettaJson() throws IOException {
     String inputJson =
-      "{\"id\":1,\"hubspot_id\":12,\"name\":\"test\",\"something_with_long_name\":\"a long thing\",\"blue_sprocket\":true}";
+      "{\"id\":1,\"hubspot_id\":12,\"name\":\"test\",\"something_with_long_name\":\"a long thing\",\"blue_sprocket\":true,\"hubspot_custom_name\":13}";
     RosettaSprocket rosettaSprocket = Rosetta
       .getMapper()
       .readValue(inputJson, RosettaSprocket.class);
@@ -102,6 +103,7 @@ public class ImmutablesTest {
     assertThat(rosettaSprocket.getName()).isEqualTo("test");
     assertThat(rosettaSprocket.getSomethingWithLongName()).isEqualTo("a long thing");
     assertThat(rosettaSprocket.isBlueSprocket()).isTrue();
+    assertThat(rosettaSprocket.getCustomName()).isEqualTo(13);
 
     JsonNode output = Rosetta.getMapper().valueToTree(rosettaSprocket);
     JsonNode original = Rosetta.getMapper().readTree(inputJson);
@@ -111,7 +113,7 @@ public class ImmutablesTest {
   @Test
   public void itDeserializesAnInterface() throws IOException {
     String inputJson =
-      "{\"id\":1,\"hubSpotId\":12,\"name\":\"test\",\"somethingWithLongName\":\"a long thing\",\"blueSprocket\":true}";
+      "{\"id\":1,\"hubSpotId\":12,\"name\":\"test\",\"somethingWithLongName\":\"a long thing\",\"blueSprocket\":true,\"hubspotCustomName\":13}";
     RosettaSprocketIF rosettaSprocketIF = objectMapper.readValue(
       inputJson,
       RosettaSprocketIF.class
@@ -121,6 +123,7 @@ public class ImmutablesTest {
     assertThat(rosettaSprocketIF.getName()).isEqualTo("test");
     assertThat(rosettaSprocketIF.getSomethingWithLongName()).isEqualTo("a long thing");
     assertThat(rosettaSprocketIF.isBlueSprocket()).isTrue();
+    assertThat(rosettaSprocketIF.getCustomName()).isEqualTo(13);
 
     JsonNode output = objectMapper.valueToTree(rosettaSprocketIF);
     JsonNode original = objectMapper.readTree(inputJson);
@@ -130,7 +133,7 @@ public class ImmutablesTest {
   @Test
   public void itDeserializesAnInterfaceFromRosetta() throws IOException {
     String inputJson =
-      "{\"id\":1,\"hubspot_id\":12,\"name\":\"test\",\"something_with_long_name\":\"a long thing\",\"blue_sprocket\":true}";
+      "{\"id\":1,\"hubspot_id\":12,\"name\":\"test\",\"something_with_long_name\":\"a long thing\",\"blue_sprocket\":true,\"hubspot_custom_name\":13}";
     RosettaSprocketIF rosettaSprocketIF = Rosetta
       .getMapper()
       .readValue(inputJson, RosettaSprocketIF.class);
@@ -139,6 +142,7 @@ public class ImmutablesTest {
     assertThat(rosettaSprocketIF.getName()).isEqualTo("test");
     assertThat(rosettaSprocketIF.getSomethingWithLongName()).isEqualTo("a long thing");
     assertThat(rosettaSprocketIF.isBlueSprocket()).isTrue();
+    assertThat(rosettaSprocketIF.getCustomName()).isEqualTo(13);
 
     JsonNode output = Rosetta.getMapper().valueToTree(rosettaSprocketIF);
     JsonNode original = Rosetta.getMapper().readTree(inputJson);
