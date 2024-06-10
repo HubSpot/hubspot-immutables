@@ -14,12 +14,20 @@ public class ImmutableMapEncoding<K, V> {
 
   @Encoding.Expose
   ImmutableMap<K, V> getImmutableMap() {
-    return field;
+    if (field != null) {
+      return field;
+    } else {
+      return ImmutableMap.of();
+    }
   }
 
   @Encoding.Expose
   Map<K, V> getMap() {
-    return field;
+    if (field != null) {
+      return field;
+    } else {
+      return ImmutableMap.of();
+    }
   }
 
   @Encoding.Copy
