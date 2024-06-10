@@ -16,12 +16,20 @@ public class ImmutableListEncoding<T> {
 
   @Encoding.Expose
   ImmutableList<T> getImmutableList() {
-    return field;
+    if (field != null) {
+      return field;
+    } else {
+      return ImmutableList.of();
+    }
   }
 
   @Encoding.Expose
   List<T> getList() {
-    return field;
+    if (field != null) {
+      return field;
+    } else {
+      return ImmutableList.of();
+    }
   }
 
   @Encoding.Copy

@@ -16,12 +16,20 @@ public class ImmutableSetEncoding<T> {
 
   @Encoding.Expose
   ImmutableSet<T> getImmutableSet() {
-    return field;
+    if (field != null) {
+      return field;
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   @Encoding.Expose
   Set<T> getSet() {
-    return field;
+    if (field != null) {
+      return field;
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   @Encoding.Copy

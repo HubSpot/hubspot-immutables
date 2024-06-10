@@ -113,4 +113,10 @@ public class ImmutableMapEncodingTest {
     TestMapWithDefault test = MAPPER.readValue(INPUT_JSON, TestMapWithDefault.class);
     assertThat(test.getInts()).containsKey("one");
   }
+
+  @Test
+  public void itDoesInitializeCollectionWhenBuildingFromParam() {
+    TestMapWithParam param = TestMapWithParam.of("test");
+    assertThat(param.getStrings()).isNotNull();
+  }
 }

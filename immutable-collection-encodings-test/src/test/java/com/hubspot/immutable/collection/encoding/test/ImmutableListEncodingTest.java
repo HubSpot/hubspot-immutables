@@ -142,4 +142,16 @@ public class ImmutableListEncodingTest {
     TestListWithDefault test = MAPPER.readValue(INPUT_JSON, TestListWithDefault.class);
     assertThat(test.getInts()).containsExactly(1);
   }
+
+  @Test
+  public void itDoesInitializeCollectionWhenBuildingFromParam() {
+    TestListWithParam param = TestListWithParam.of("test");
+    assertThat(param.getStrings()).isNotNull();
+  }
+
+  @Test
+  public void itDoesHaveCorrectDefaultWhenBuildingFromParam() {
+    TestListWithParamAndDefault param = TestListWithParamAndDefault.of("test");
+    assertThat(param.getStrings()).containsExactly("default");
+  }
 }

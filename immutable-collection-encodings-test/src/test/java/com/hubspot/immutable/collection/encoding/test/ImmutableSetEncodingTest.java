@@ -134,4 +134,10 @@ public class ImmutableSetEncodingTest {
     TestSetWithDefault test = MAPPER.readValue(INPUT_JSON, TestSetWithDefault.class);
     assertThat(test.getInts()).containsExactly(1);
   }
+
+  @Test
+  public void itDoesInitializeCollectionWhenBuildingFromParam() {
+    TestSetWithParam param = TestSetWithParam.of("test");
+    assertThat(param.getStrings()).isNotNull();
+  }
 }
