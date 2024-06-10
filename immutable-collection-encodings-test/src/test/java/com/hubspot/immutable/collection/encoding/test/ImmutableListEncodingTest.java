@@ -144,9 +144,14 @@ public class ImmutableListEncodingTest {
   }
 
   @Test
-  public void itDoesInitializeCollectionWhenBuildingFromParam()
-    throws JsonProcessingException {
+  public void itDoesInitializeCollectionWhenBuildingFromParam() {
     TestListWithParam param = TestListWithParam.of("test");
     assertThat(param.getStrings()).isNotNull();
+  }
+
+  @Test
+  public void itDoesHaveCorrectDefaultWhenBuildingFromParam() {
+    TestListWithParamAndDefault param = TestListWithParamAndDefault.of("test");
+    assertThat(param.getStrings()).containsExactly("default");
   }
 }

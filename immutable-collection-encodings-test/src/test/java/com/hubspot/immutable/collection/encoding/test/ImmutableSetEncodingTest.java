@@ -136,8 +136,7 @@ public class ImmutableSetEncodingTest {
   }
 
   @Test
-  public void itDoesInitializeCollectionWhenBuildingFromParam()
-    throws JsonProcessingException {
+  public void itDoesInitializeCollectionWhenBuildingFromParam() {
     TestSetWithParam param = TestSetWithParam.of("test");
     assertThat(param.getStrings()).isNotNull();
   }
