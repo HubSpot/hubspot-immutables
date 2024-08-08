@@ -27,7 +27,7 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
   visibility = ImplementationVisibility.SAME, // Generated class will have the same visibility as the abstract class/interface)
   jdkOnly = true, // For Guava 18+, this stops MoreObjects from being used in toString and ImmutableHashMap.Builder from being used for building map fields (among other effects).
   passAnnotations = { ImmutableInherited.class, RosettaAnnotation.class },
-  redactedMask = "#####"
+  redactedMask = "**REDACTED**"
 )
 public @interface HubSpotStyle {
 }

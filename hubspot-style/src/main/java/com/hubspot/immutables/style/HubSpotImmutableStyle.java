@@ -36,7 +36,7 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
   forceJacksonPropertyNames = false, // otherwise we can't use RosettaNamingStrategies
   visibility = ImplementationVisibility.SAME, // Generated class will have the same visibility as the abstract class/interface)
   passAnnotations = { ImmutableInherited.class, RosettaAnnotation.class },
-  redactedMask = "#####"
+  redactedMask = "**REDACTED**"
 )
 @ImmutableSetEncodingEnabled
 @ImmutableListEncodingEnabled
