@@ -23,7 +23,8 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
   forceJacksonPropertyNames = false, // otherwise we can't use RosettaNamingStrategies
   visibility = ImplementationVisibility.SAME, // Generated class will have the same visibility as the abstract class/interface)
   jdkOnly = true, // For Guava 18+, this stops MoreObjects from being used in toString and ImmutableHashMap.Builder from being used for building map fields (among other effects).
-  passAnnotations = { ImmutableInherited.class, RosettaAnnotation.class }
+  passAnnotations = { ImmutableInherited.class, RosettaAnnotation.class },
+  redactedMask = "#####"
 )
 public @interface HubSpotModifiableStyle {
 }
