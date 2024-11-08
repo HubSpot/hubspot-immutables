@@ -24,6 +24,8 @@
   <properties>
     <project.build.targetJdk>8</project.build.targetJdk>
     <project.build.releaseJdk>8</project.build.releaseJdk>
+
+    <dep.rosetta.version>3.12.2</dep.rosetta.version>
   </properties>
 
   <dependencyManagement>
@@ -46,12 +48,12 @@
       <dependency>
         <groupId>com.hubspot.rosetta</groupId>
         <artifactId>RosettaAnnotations</artifactId>
-        <version>3.11.8</version>
+        <version>${dep.rosetta.version}</version>
       </dependency>
       <dependency>
         <groupId>com.hubspot.rosetta</groupId>
         <artifactId>RosettaCore</artifactId>
-        <version>3.11.8</version>
+        <version>${dep.rosetta.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
