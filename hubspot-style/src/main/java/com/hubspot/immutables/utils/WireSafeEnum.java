@@ -358,7 +358,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
               (klass, value) -> create(enumType, value, p, ctxt)
             );
           } else {
-            throw ctxt.wrongTokenException(p, JsonToken.VALUE_STRING, null);
+            throw ctxt.wrongTokenException(p, enumType, JsonToken.VALUE_STRING, null);
           }
         }
       };
