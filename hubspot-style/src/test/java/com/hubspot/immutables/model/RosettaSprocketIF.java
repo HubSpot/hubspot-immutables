@@ -1,7 +1,7 @@
 package com.hubspot.immutables.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.hubspot.immutables.style.HubSpotStyle;
 import com.hubspot.rosetta.annotations.RosettaNaming;
@@ -10,7 +10,7 @@ import org.immutables.value.Value;
 
 @HubSpotStyle
 @Value.Immutable
-@RosettaNaming(value = LowerCaseWithUnderscoresStrategy.class)
+@RosettaNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonDeserialize(as = RosettaSprocket.class)
 public interface RosettaSprocketIF {
   int getId();
