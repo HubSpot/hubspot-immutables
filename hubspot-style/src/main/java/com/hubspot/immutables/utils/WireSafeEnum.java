@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualKeyDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.ImmutableSet;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 import com.hubspot.immutables.utils.WireSafeEnum.KeyDeserializer;
 import java.io.IOException;
@@ -179,6 +180,18 @@ public final class WireSafeEnum<T extends Enum<T>> {
     checkNotNull(value, "value");
 
     return enumValue.isPresent() && enumValue.get() == value;
+  }
+
+  @SafeVarargs
+  public final boolean containsAnyOf(@Nonnull T... values) {
+    checkNotNull(values, "values");
+    // copy-of doesn't alloc on empty input
+    return containsAnyOf(ImmutableSet.copyOf(values));
+  }
+
+  public boolean containsAnyOf(@Nonnull Collection<T> values) {
+    checkNotNull(values, "values");
+    return enumValue.isPresent() && values.contains(enumValue.get());
   }
 
   @Override
