@@ -3,7 +3,7 @@ package com.hubspot.immutables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hubspot.immutables.utils.WireSafeEnum;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class WireSafeEncodingsTest {
 
