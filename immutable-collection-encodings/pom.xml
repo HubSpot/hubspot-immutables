@@ -9,6 +9,7 @@
   </parent>
 
   <artifactId>immutable-collection-encodings</artifactId>
+  <name>${project.groupId}:${project.artifactId}</name>
 
   <properties>
     <basepom.check.skip-spotbugs>true</basepom.check.skip-spotbugs>

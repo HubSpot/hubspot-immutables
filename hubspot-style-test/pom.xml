@@ -9,6 +9,7 @@
   </parent>
 
   <artifactId>hubspot-style-test</artifactId>
+  <name>${project.groupId}:${project.artifactId}</name>
 
   <properties>
     <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>

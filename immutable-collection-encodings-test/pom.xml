@@ -9,6 +9,7 @@
   </parent>
 
   <artifactId>immutable-collection-encodings-test</artifactId>
+  <name>${project.groupId}:${project.artifactId}</name>
 
   <properties>
     <basepom.check.skip-findbugs>true</basepom.check.skip-findbugs>
