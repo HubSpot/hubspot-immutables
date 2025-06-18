@@ -8,8 +8,8 @@
     <version>1.11.2-SNAPSHOT</version>
   </parent>
 
-  <name>${project.groupId}:${project.artifactId}</name>
   <artifactId>hubspot-style</artifactId>
+  <name>${project.groupId}:${project.artifactId}</name>
 
   <properties>
     <basepom.check.phase-spotbugs>never</basepom.check.phase-spotbugs>
