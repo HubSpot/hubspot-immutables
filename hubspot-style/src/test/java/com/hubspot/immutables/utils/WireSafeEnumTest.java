@@ -214,6 +214,17 @@ public class WireSafeEnumTest {
   }
 
   @Test
+  public void itCanCheckContains() {
+    WireSafeEnum<EnumWithOverride> abc = WireSafeEnum.of(EnumWithOverride.ABC);
+    WireSafeEnum<EnumWithOverride> def = WireSafeEnum.of(EnumWithOverride.DEF);
+
+    assertThat(abc.contains(EnumWithOverride.ABC)).isTrue();
+    assertThat(abc.contains(EnumWithOverride.DEF)).isFalse();
+    assertThat(abc.containsAnyOf(EnumWithOverride.ABC, EnumWithOverride.DEF)).isTrue();
+    assertThat(def.containsAnyOf(EnumWithOverride.ABC, EnumWithOverride.DEF)).isTrue();
+  }
+
+  @Test
   public void itParsesNullAsNull() throws IOException {
     WireSafeEnum<RetentionPolicy> wrapper = MAPPER.readValue(
       "null",
