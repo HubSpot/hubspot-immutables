@@ -10,7 +10,7 @@
 
   <groupId>com.hubspot.immutables</groupId>
   <artifactId>hubspot-immutables</artifactId>
-  <version>1.11.2-SNAPSHOT</version>
+  <version>1.11.2</version>
   <packaging>pom</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -76,4 +76,8 @@
       <email>jstehler@hubspot.com</email>
     </developer>
   </developers>
+
+  <scm>
+    <tag>hubspot-immutables-1.11.2</tag>
+  </scm>
 </project>
