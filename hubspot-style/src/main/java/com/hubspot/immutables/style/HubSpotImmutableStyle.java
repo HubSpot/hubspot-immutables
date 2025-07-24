@@ -34,6 +34,7 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
   throwForInvalidImmutableState = InvalidImmutableStateException.class,
   optionalAcceptNullable = true, // allow for an Optional<T> to have a setter that takes a null value of T
   forceJacksonPropertyNames = false, // otherwise we can't use RosettaNamingStrategies
+  setJacksonPropertyRequired = false, // having this `true` makes `Optional` properties "required" in json schemas
   visibility = ImplementationVisibility.SAME, // Generated class will have the same visibility as the abstract class/interface)
   passAnnotations = { ImmutableInherited.class, RosettaAnnotation.class },
   redactedMask = "**REDACTED**"
