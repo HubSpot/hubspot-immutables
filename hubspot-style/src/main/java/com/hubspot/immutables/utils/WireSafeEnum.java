@@ -212,7 +212,7 @@ public final class WireSafeEnum<T extends Enum<T>> {
 
   @Override
   public int hashCode() {
-    return Objects.hash(enumType, jsonValue, enumValue);
+    return Objects.hash(enumType.getName(), jsonValue, enumValue);
   }
 
   @Override
