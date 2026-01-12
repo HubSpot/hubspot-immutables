@@ -10,7 +10,7 @@
 
   <groupId>com.hubspot.immutables</groupId>
   <artifactId>hubspot-immutables</artifactId>
-  <version>1.11.3-SNAPSHOT</version>
+  <version>1.11.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
