@@ -1,6 +1,7 @@
 package com.hubspot.immutables.utils;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.BeanProperty;
@@ -9,14 +10,22 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualKeyDeserializer;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonStringFormatVisitor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.ser.ContextualSerializer;
+import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
 import com.google.common.collect.ImmutableSet;
 import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 import com.hubspot.immutables.utils.WireSafeEnum.KeyDeserializer;
+import com.hubspot.immutables.utils.WireSafeEnum.Serializer;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -52,6 +61,7 @@ import javax.annotation.Nonnull;
  *    breaking change from a code perspective and Java code usages
  *    of the field will need to get updated
  */
+@JsonSerialize(using = Serializer.class)
 @JsonDeserialize(using = Deserializer.class, keyUsing = KeyDeserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
 
@@ -325,6 +335,89 @@ public final class WireSafeEnum<T extends Enum<T>> {
       return elements + 1;
     } else {
       return (int) ((float) elements / 0.75F + 1.0F);
+    }
+  }
+
+  // Use a custom serializer so that we can override the schema introspection and
+  // propagate the allowed enum values from the underlying enum type. Otherwise,
+  // WireSafeEnum just shows up as a string in the schema and the enum values are lost.
+  @SuppressWarnings("unchecked")
+  public static class Serializer
+    extends StdScalarSerializer<WireSafeEnum<?>>
+    implements ContextualSerializer {
+
+    private final Optional<Class<? extends Enum<?>>> enumType;
+
+    public Serializer() {
+      this(Optional.empty());
+    }
+
+    private Serializer(Optional<Class<? extends Enum<?>>> enumType) {
+      super((Class<WireSafeEnum<?>>) (Class<?>) WireSafeEnum.class);
+      this.enumType = enumType;
+    }
+
+    @Override
+    public void serialize(
+      WireSafeEnum<?> value,
+      JsonGenerator gen,
+      SerializerProvider provider
+    ) throws IOException {
+      gen.writeString(value.asString());
+    }
+
+    @Override
+    public JsonSerializer<?> createContextual(
+      SerializerProvider prov,
+      BeanProperty property
+    ) {
+      if (property == null) {
+        return this;
+      }
+
+      Optional<Class<? extends Enum<?>>> enumType = Optional
+        .ofNullable(property.getType())
+        .filter(wrapperType -> wrapperType.containedTypeCount() == 1)
+        .map(wrapperType -> wrapperType.containedType(0))
+        .map(wrapperType -> (Class<? extends Enum<?>>) wrapperType.getRawClass());
+
+      return new Serializer(enumType);
+    }
+
+    @Override
+    public void acceptJsonFormatVisitor(
+      JsonFormatVisitorWrapper visitor,
+      JavaType typeHint
+    ) throws JsonMappingException {
+      JsonStringFormatVisitor stringVisitor = visitor.expectStringFormat(typeHint);
+      if (stringVisitor == null) {
+        return;
+      }
+
+      Optional<Class<? extends Enum<?>>> enumType = this.enumType;
+
+      // fallback: try pulling enumType from typeHint
+      if (
+        !enumType.isPresent() && typeHint != null && typeHint.containedTypeCount() == 1
+      ) {
+        enumType =
+          Optional.of((Class<? extends Enum<?>>) typeHint.containedType(0).getRawClass());
+      }
+
+      if (!enumType.isPresent() || !enumType.get().isEnum()) {
+        return;
+      }
+
+      ImmutableSet.Builder<String> enumValues = ImmutableSet.builder();
+      for (Enum<?> e : enumType.get().getEnumConstants()) {
+        enumValues.add(enumValue(e));
+      }
+
+      stringVisitor.enumTypes(enumValues.build());
+    }
+
+    private static <T extends Enum<T>> String enumValue(Enum<?> e) {
+      return WireSafeEnum.of((T) e).asString();
     }
   }
 
