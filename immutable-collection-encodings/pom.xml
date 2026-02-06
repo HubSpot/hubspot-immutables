@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot.immutables</groupId>
     <artifactId>hubspot-immutables</artifactId>
-    <version>1.11.4-SNAPSHOT</version>
+    <version>1.11.4</version>
   </parent>
 
   <artifactId>immutable-collection-encodings</artifactId>
@@ -30,4 +30,8 @@
       <artifactId>guava</artifactId>
     </dependency>
   </dependencies>
+
+  <scm>
+    <tag>hubspot-immutables-1.11.4</tag>
+  </scm>
 </project>
