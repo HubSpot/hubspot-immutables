@@ -1,6 +1,7 @@
 package com.hubspot.immutables;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.hubspot.immutables.utils.WireSafeEnum;
 import org.junit.Test;
@@ -77,5 +78,24 @@ public class WireSafeEncodingsTest {
       .build();
 
     assertThat(one.getFirstEnum()).isEqualTo(WireSafeEnum.of(TestEnum.THREE));
+  }
+
+  @Test
+  public void itDisallowsNullForWireSafeEnumField() {
+    assertThatThrownBy(() -> {
+        TestImmutable one = TestImmutable.builder().setString("value").build();
+      })
+      .hasMessageContaining("Required WireSafeEnum field secondEnum is not set");
+
+    assertThatThrownBy(() -> {
+        TestEnum nullEnumValue = null;
+        TestImmutable one = TestImmutable
+          .builder()
+          .setString("value")
+          .setSecondEnum(TestEnum.ONE)
+          .build()
+          .withSecondEnum(nullEnumValue);
+      })
+      .hasMessageContaining("Required WireSafeEnum field secondEnum cannot be null");
   }
 }
