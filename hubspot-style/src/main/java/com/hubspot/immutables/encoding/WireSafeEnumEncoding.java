@@ -1,6 +1,7 @@
 package com.hubspot.immutables.encoding;
 
 import com.hubspot.immutables.utils.WireSafeEnum;
+import com.hubspot.immutables.validation.InvalidImmutableStateException;
 import org.immutables.encode.Encoding;
 import org.immutables.encode.Encoding.Naming;
 import org.immutables.encode.Encoding.StandardNaming;
@@ -21,6 +22,11 @@ class WireSafeEnumEncoding<T extends Enum<T>> {
   @Encoding.Copy
   @Naming(standard = StandardNaming.WITH)
   WireSafeEnum<T> withValue(T value) {
+    if (value == null) {
+      throw new InvalidImmutableStateException(
+        "Required WireSafeEnum field <*> cannot be null"
+      );
+    }
     return WireSafeEnum.of(value);
   }
 
@@ -28,6 +34,11 @@ class WireSafeEnumEncoding<T extends Enum<T>> {
   @Encoding.Copy
   @Naming(standard = StandardNaming.WITH)
   WireSafeEnum<T> withWireSafeValue(WireSafeEnum<T> value) {
+    if (value == null) {
+      throw new InvalidImmutableStateException(
+        "Required WireSafeEnum field <*> cannot be null"
+      );
+    }
     return value;
   }
 
@@ -56,6 +67,11 @@ class WireSafeEnumEncoding<T extends Enum<T>> {
 
     @Encoding.Build
     WireSafeEnum<T> build() {
+      if (fieldValue == null) {
+        throw new InvalidImmutableStateException(
+          "Required WireSafeEnum field <*> is not set"
+        );
+      }
       return fieldValue;
     }
   }
