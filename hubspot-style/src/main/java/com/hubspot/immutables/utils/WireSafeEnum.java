@@ -1,5 +1,6 @@
 package com.hubspot.immutables.utils;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -299,10 +300,33 @@ public final class WireSafeEnum<T extends Enum<T>> {
       if (enumValue == deserializedValue) {
         jsonMap.put(jsonValue, wireSafeEnum);
       }
+
+      for (String alias : getJsonAliases(enumType, enumValue)) {
+        jsonMap.computeIfAbsent(alias, jv -> new WireSafeEnum<>(enumType, jv, enumValue));
+      }
     }
 
     ENUM_LOOKUP_CACHE.put(enumType, enumMap);
     JSON_LOOKUP_CACHE.put(enumType, jsonMap);
+  }
+
+  private static <T extends Enum<T>> String[] getJsonAliases(
+    Class<T> enumType,
+    T enumConstant
+  ) {
+    JsonAlias annotation;
+
+    try {
+      annotation = enumType.getField(enumConstant.name()).getAnnotation(JsonAlias.class);
+    } catch (NoSuchFieldException e) {
+      annotation = null;
+    }
+
+    if (annotation != null) {
+      return annotation.value();
+    } else {
+      return new String[] {};
+    }
   }
 
   private static <T extends Enum<T>> Class<T> getRealEnumType(Class<T> enumType) {

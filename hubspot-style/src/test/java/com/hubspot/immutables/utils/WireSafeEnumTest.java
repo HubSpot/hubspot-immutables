@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -38,6 +39,13 @@ public class WireSafeEnumTest {
     public String reversedName() {
       return new StringBuilder(name()).reverse().toString();
     }
+  }
+
+  public enum AliasJsonEnum {
+    @JsonAlias("abc")
+    ABC,
+    @JsonAlias("def")
+    DEF,
   }
 
   public enum NullJsonEnum {
@@ -312,6 +320,42 @@ public class WireSafeEnumTest {
   }
 
   @Test
+  public void itBuildsFromJsonAlias() {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "abc"
+    );
+
+    assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+    assertThat(wrapper.asString()).isEqualTo("abc");
+    assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
+  }
+
+  @Test
+  public void itBuildsFromNameWhenJsonAliasIsAvalable() {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "ABC"
+    );
+
+    assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+    assertThat(wrapper.asString()).isEqualTo("ABC");
+    assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
+  }
+
+  @Test
+  public void itBuildsFromUnknownStringWhenJsonAliasIsAvalable() {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "tuv"
+    );
+
+    assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+    assertThat(wrapper.asString()).isEqualTo("tuv");
+    assertThat(wrapper.asEnum()).isEqualTo(Optional.empty());
+  }
+
+  @Test
   public void itBuildsFromUnknownString() {
     WireSafeEnum<RetentionPolicy> wrapper = WireSafeEnum.fromJson(
       RetentionPolicy.class,
@@ -433,6 +477,26 @@ public class WireSafeEnumTest {
       "ABC"
     );
     writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"ABC\""));
+  }
+
+  @Test
+  public void itSerializesAliasAsConstantName() throws IOException {
+    WireSafeEnum<AliasJsonEnum> wrapper = WireSafeEnum.fromJson(
+      AliasJsonEnum.class,
+      "abc"
+    );
+
+    writeToJson(wrapper).forEach(s -> assertThat(s).isEqualTo("\"abc\""));
+  }
+
+  @Test
+  public void itDeserializesFromKnownAliasString() throws IOException {
+    readFromJson("\"abc\"", new TypeReference<WireSafeEnum<AliasJsonEnum>>() {})
+      .forEach(wrapper -> {
+        assertThat(wrapper.enumType()).isEqualTo(AliasJsonEnum.class);
+        assertThat(wrapper.asString()).isEqualTo("abc");
+        assertThat(wrapper.asEnum()).isEqualTo(Optional.of(AliasJsonEnum.ABC));
+      });
   }
 
   @Test
