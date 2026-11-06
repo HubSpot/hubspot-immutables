@@ -27,13 +27,19 @@ import com.hubspot.immutables.utils.WireSafeEnum.Deserializer;
 import com.hubspot.immutables.utils.WireSafeEnum.KeyDeserializer;
 import com.hubspot.immutables.utils.WireSafeEnum.Serializer;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -65,7 +71,6 @@ import javax.annotation.Nonnull;
 @JsonDeserialize(using = Deserializer.class, keyUsing = KeyDeserializer.class)
 public final class WireSafeEnum<T extends Enum<T>> {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final Map<Class<?>, Map<?, WireSafeEnum<?>>> ENUM_LOOKUP_CACHE =
     new ConcurrentHashMap<>();
   private static final Map<Class<?>, Map<String, WireSafeEnum<?>>> JSON_LOOKUP_CACHE =
@@ -251,8 +256,139 @@ public final class WireSafeEnum<T extends Enum<T>> {
   }
 
   private static <T extends Enum<T>> void initializeCache(Class<T> enumType) {
+    CacheEntries<T> entries = usesDefaultJacksonNames(enumType)
+      ? buildCacheFromNames(enumType)
+      : buildCacheWithMapper(enumType);
+    ENUM_LOOKUP_CACHE.put(enumType, entries.enumMap);
+    JSON_LOOKUP_CACHE.put(enumType, entries.jsonMap);
+  }
+
+  static final class CacheEntries<T extends Enum<T>> {
+
+    final Map<T, WireSafeEnum<?>> enumMap;
+    final Map<String, WireSafeEnum<?>> jsonMap;
+
+    private CacheEntries(Class<T> enumType, int size) {
+      this.enumMap = new EnumMap<>(enumType);
+      this.jsonMap = new HashMap<>(mapCapacity(size));
+    }
+  }
+
+  /*
+  True only when nothing Jackson could read touches the enum, so the private
+  MAPPER (no modules, mixins or enum features) would serialize each constant
+  as name() and deserialize it back to itself.
+   */
+  static boolean usesDefaultJacksonNames(Class<? extends Enum<?>> enumType) {
+    try {
+      Set<Class<?>> seen = new HashSet<>();
+      if (!isJacksonFree(enumType, seen)) {
+        return false;
+      }
+      for (Enum<?> constant : enumType.getEnumConstants()) {
+        if (!isJacksonFree(constant.getClass(), seen)) {
+          return false;
+        }
+      }
+      return true;
+    } catch (LinkageError | SecurityException e) {
+      // leave the outcome to the mapper path, as before
+      return false;
+    }
+  }
+
+  private static boolean isJacksonFree(Class<?> type, Set<Class<?>> seen) {
+    if (type == null || type == Enum.class || type == Object.class || !seen.add(type)) {
+      return true;
+    }
+    if (hasJacksonAnnotation(type.getDeclaredAnnotations())) {
+      return false;
+    }
+    for (Field field : type.getDeclaredFields()) {
+      if (hasJacksonAnnotation(field.getDeclaredAnnotations())) {
+        return false;
+      }
+    }
+    for (Method method : type.getDeclaredMethods()) {
+      if (
+        hasJacksonAnnotation(method.getDeclaredAnnotations()) ||
+        hasJacksonAnnotation(method.getParameterAnnotations())
+      ) {
+        return false;
+      }
+    }
+    for (Constructor<?> constructor : type.getDeclaredConstructors()) {
+      if (
+        hasJacksonAnnotation(constructor.getDeclaredAnnotations()) ||
+        hasJacksonAnnotation(constructor.getParameterAnnotations())
+      ) {
+        return false;
+      }
+    }
+    for (Class<?> iface : type.getInterfaces()) {
+      if (!isJacksonFree(iface, seen)) {
+        return false;
+      }
+    }
+    return isJacksonFree(type.getSuperclass(), seen);
+  }
+
+  private static boolean hasJacksonAnnotation(Annotation[][] annotations) {
+    for (Annotation[] group : annotations) {
+      if (hasJacksonAnnotation(group)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasJacksonAnnotation(Annotation[] annotations) {
+    for (Annotation annotation : annotations) {
+      if (isJacksonAnnotationType(annotation.annotationType(), new HashSet<>())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Recurses into meta-annotations to catch @JacksonAnnotationsInside bundles.
+  private static boolean isJacksonAnnotationType(
+    Class<? extends Annotation> type,
+    Set<Class<?>> seen
+  ) {
+    if (type.getName().startsWith("com.fasterxml.jackson.")) {
+      return true;
+    }
+    if (!seen.add(type)) {
+      return false;
+    }
+    for (Annotation meta : type.getDeclaredAnnotations()) {
+      if (isJacksonAnnotationType(meta.annotationType(), seen)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static <T extends Enum<T>> CacheEntries<T> buildCacheFromNames(Class<T> enumType) {
     T[] enumConstants = enumType.getEnumConstants();
-    ArrayNode stringArray = MAPPER.valueToTree(enumConstants);
+    CacheEntries<T> entries = new CacheEntries<>(enumType, enumConstants.length);
+    for (T enumValue : enumConstants) {
+      WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(
+        enumType,
+        enumValue.name(),
+        enumValue
+      );
+      entries.enumMap.put(enumValue, wireSafeEnum);
+      entries.jsonMap.put(enumValue.name(), wireSafeEnum);
+    }
+    return entries;
+  }
+
+  static <T extends Enum<T>> CacheEntries<T> buildCacheWithMapper(Class<T> enumType) {
+    ObjectMapper mapper = MapperHolder.MAPPER;
+    T[] enumConstants = enumType.getEnumConstants();
+    ArrayNode stringArray = mapper.valueToTree(enumConstants);
     /*
     Convert the enum constants to JSON and then back, in case this
     mapping is not bijective. For example, two enum constants might
@@ -261,15 +397,12 @@ public final class WireSafeEnum<T extends Enum<T>> {
     This should match the behavior as if the enum wasn't wrapped in
     WireSafeEnum.
      */
-    T[] deserializedConstants = MAPPER.convertValue(
+    T[] deserializedConstants = mapper.convertValue(
       stringArray,
-      MAPPER.getTypeFactory().constructArrayType(enumType)
+      mapper.getTypeFactory().constructArrayType(enumType)
     );
 
-    Map<T, WireSafeEnum<?>> enumMap = new EnumMap<>(enumType);
-    Map<String, WireSafeEnum<?>> jsonMap = new HashMap<>(
-      mapCapacity(enumConstants.length)
-    );
+    CacheEntries<T> entries = new CacheEntries<>(enumType, enumConstants.length);
 
     for (int i = 0; i < enumConstants.length; i++) {
       T enumValue = enumConstants[i];
@@ -291,18 +424,17 @@ public final class WireSafeEnum<T extends Enum<T>> {
       }
 
       WireSafeEnum<T> wireSafeEnum = new WireSafeEnum<>(enumType, jsonValue, enumValue);
-      enumMap.put(enumValue, wireSafeEnum);
+      entries.enumMap.put(enumValue, wireSafeEnum);
       /*
       If the deserialized value doesn't match, then this enum
       is probably some sort of alias
        */
       if (enumValue == deserializedValue) {
-        jsonMap.put(jsonValue, wireSafeEnum);
+        entries.jsonMap.put(jsonValue, wireSafeEnum);
       }
     }
 
-    ENUM_LOOKUP_CACHE.put(enumType, enumMap);
-    JSON_LOOKUP_CACHE.put(enumType, jsonMap);
+    return entries;
   }
 
   private static <T extends Enum<T>> Class<T> getRealEnumType(Class<T> enumType) {
@@ -327,6 +459,11 @@ public final class WireSafeEnum<T extends Enum<T>> {
     @SuppressWarnings("unchecked")
     Class<T> widenedType = (Class<T>) superType;
     return widenedType;
+  }
+
+  private static final class MapperHolder {
+
+    static final ObjectMapper MAPPER = new ObjectMapper();
   }
 
   // adapted from Guava
